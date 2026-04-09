@@ -1,62 +1,71 @@
 # GDSN-X™ — Decision Intelligence System
 
 ## Overview
-GDSN-X™ is a decision intelligence system designed to evaluate risk, stability, and strategic impact across business, policy, and global environments.
+**GDSN-X™** is a next-generation decision intelligence system designed to evaluate **risk, stability, and strategic impact** across business, policy, and global environments.
 
-It provides structured analysis for high-stakes decisions using a unified scoring and evaluation framework.
+It integrates economic, political, and social dimensions into a unified analytical framework for **high-stakes decision-making**.
 
 ---
 
 ## Problem
-
-In today's world, critical decisions are made without a standardized system to evaluate:
+Modern decision-making environments lack a standardized, structured system to evaluate:
 
 - Risk exposure  
-- Stability impact  
-- Long-term consequences  
+- System stability  
+- Long-term strategic consequences  
 
-This leads to financial loss, policy failure, and strategic miscalculations.
+This gap often leads to **financial loss, policy failure, and systemic miscalculations**.
 
 ---
 
 ## Solution
+GDSN-X™ introduces a **multi-layered decision evaluation framework** that provides:
 
-GDSN-X™ introduces a structured decision evaluation model that provides:
+- **Risk Score (0–100)**  
+- **Stability Assessment**  
+- **Strategic Recommendation**  
 
-- Risk Score (0–100)  
-- Stability Assessment  
-- Strategic Recommendation  
+The system transforms complex uncertainty into **actionable intelligence**.
 
 ---
 
 ## Core Components
 
 ### 1. Decision Engine
-Evaluates decisions based on economic, political, and social factors.
+Analyzes decisions using integrated economic, political, and social indicators.
 
 ### 2. Risk Scoring Model
-Quantifies uncertainty into a measurable score.
+Quantifies uncertainty into a structured and interpretable score.
 
 ### 3. Protocol Layer (GDP™)
-Defines how decisions should be analyzed and validated.
+Defines standardized rules for evaluation, validation, and decision logic.
+
+---
+
+## Key Capabilities
+
+- Multi-dimensional risk analysis  
+- Scenario modeling and comparative evaluation  
+- Decision support for policy and strategy  
+- Structured, exportable analytical outputs  
 
 ---
 
 ## Use Cases
 
-- Business Strategy  
-- Market Expansion  
-- Policy Analysis  
-- Risk Assessment  
+- Business Strategy & Expansion  
+- Policy & Governance Analysis  
+- Market Risk Assessment  
+- Strategic Planning Systems  
 
 ---
 
-## System Output Example
+## Example Output
 
-Input:
-"Expand business to a new market"
+**Input:**  
+`Expand business to a new market`
 
-Output:
+**Output:**  
 - Risk Score: 62  
 - Stability: Medium Risk  
 - Recommendation: Proceed with caution  
@@ -64,14 +73,11 @@ Output:
 ---
 
 ## Status
-
-This is an actively developing system.
+This system is under **active development**, with continuous improvements in modeling, accuracy, and analytical depth.
 
 ---
 
 ## Services
-
-We provide:
 
 - Decision Risk Analysis  
 - Strategic Advisory Reports  
@@ -80,13 +86,34 @@ We provide:
 ---
 
 ## Contact
+For collaboration, research, or consulting inquiries:
 
-For collaboration or consulting inquiries:
-[Add your email or contact here]
+📩 Email: *[Add your email here]*
 
 ---
 
 ## License
 
-MIT License (Initial Release)  
-Commercial usage terms will be defined separately.
+**Proprietary License**
+
+This project is protected under a custom proprietary license.
+
+- Non-commercial use is allowed for research and educational purposes only  
+- Commercial use, resale, or redistribution is strictly prohibited  
+- The author retains full and exclusive commercial rights  
+
+**Note:** This is a *source-available system*, not open-source software.
+
+---
+
+## Author
+
+**Dr. Bidyut Mazumdar**  
+Independent Researcher — Decision Intelligence, AI Systems, and Strategic Governance  
+
+---
+
+## Disclaimer
+
+This system provides analytical insights for decision support.  
+Final decisions remain the responsibility of the user.

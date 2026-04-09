@@ -14,6 +14,32 @@ These dimensions represent the primary drivers of systemic instability across bu
 
 ---
 
+## Mathematical Formalization
+
+Let:
+
+E, P, S ∈ [0,100]
+
+Define the risk function:
+
+R(E, P, S) = w₁E + w₂P + w₃S
+
+Where:
+
+w₁ = 0.40  
+w₂ = 0.35  
+w₃ = 0.25  
+
+Subject to:
+
+w₁ + w₂ + w₃ = 1
+
+Thus:
+
+R(E, P, S) ∈ [0,100]
+
+---
+
 ## Risk Model Formula
 
 Risk Score = (0.40 × E) + (0.35 × P) + (0.25 × S)
@@ -89,12 +115,24 @@ This enables fast and actionable interpretation.
 
 ---
 
+## Interpretation of Scores
+
+The risk score should be interpreted as follows:
+
+- 0–39 → Operationally stable environment with low disruption probability  
+- 40–69 → Moderate uncertainty requiring controlled execution  
+- 70–100 → High instability with significant risk exposure  
+
+The score reflects **relative risk intensity**, not absolute certainty.
+
+---
+
 ## Multi-Factor Insight Layer
 
 The system identifies:
 
-- Primary Risk Driver (highest factor)
-- Secondary Risk Driver (second-highest factor)
+- Primary Risk Driver (highest factor)  
+- Secondary Risk Driver (second-highest factor)  
 
 ### Purpose
 
@@ -149,11 +187,14 @@ Extendable with additional variables, dynamic weighting, or AI integration
 
 ---
 
-## Limitations
+## Model Limitations & Scope
 
-- This model does not predict future outcomes  
-- Accuracy depends on input quality  
-- Black swan events are not explicitly modeled  
+- The model evaluates structured risk, not future certainty  
+- Outputs are dependent on input quality and contextual accuracy  
+- External shocks and non-linear systemic events are not explicitly modeled  
+- The system is intended for decision support, not autonomous decision-making  
+
+Users should apply domain-specific judgment when interpreting results.
 
 ---
 

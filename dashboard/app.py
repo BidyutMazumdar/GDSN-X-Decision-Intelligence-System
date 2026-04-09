@@ -75,7 +75,13 @@ Recommendation:
 ------------------------------------
 """
 
-    st.download_button("📥 Download Report", report, "GDSN-X_Report.txt")
+    # ✅ Correct place for download button
+    st.download_button(
+        label="📥 Download Report",
+        data=report,
+        file_name="GDSN-X_Report.txt",
+        mime="text/plain"
+    )
 
     st.markdown("### Full Report Preview")
     st.code(report)
@@ -101,8 +107,8 @@ with col2:
     soc_b = st.slider("Social B", 0, 100, 50, key="soc_b")
 
 if st.button("Compare Scenarios"):
-    score_a, level_a = risk_score(econ_a, pol_a, soc_a)
-    score_b, level_b = risk_score(econ_b, pol_b, soc_b)
+    score_a, _ = risk_score(econ_a, pol_a, soc_a)
+    score_b, _ = risk_score(econ_b, pol_b, soc_b)
 
     st.subheader("Comparison Result")
 

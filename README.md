@@ -1,9 +1,15 @@
 # GDSN-X™ — Decision Intelligence System
 
+## 🌐 Live System
+Access the live platform:  
+https://gdsn-x-decision-intelligence-system-hcme9we9bncdwuftarjysm.streamlit.app/
+
+---
+
 ## Overview
 **GDSN-X™** is a next-generation decision intelligence system designed to evaluate **risk, stability, and strategic impact** across business, policy, and global environments.
 
-The system integrates **economic, political, and social dimensions** into a unified analytical framework for **high-stakes and strategic decision-making**.
+The system integrates **economic, political, and social dimensions** into a unified analytical architecture for **high-stakes and strategic decision-making**.
 
 ---
 
@@ -14,7 +20,7 @@ Modern decision environments lack a **standardized and structured framework** to
 - System stability  
 - Long-term strategic consequences  
 
-This absence leads to **financial losses, policy failures, and systemic miscalculations** across institutions and markets.
+This gap leads to **financial losses, policy failures, and systemic miscalculations** across institutions and markets.
 
 ---
 
@@ -25,7 +31,7 @@ GDSN-X™ introduces a **multi-layered decision evaluation architecture** that d
 - **Stability Assessment**  
 - **Strategic Recommendation**  
 
-The system transforms complex, multi-domain uncertainty into **quantifiable and actionable intelligence**.
+The system converts complex, multi-domain uncertainty into **quantifiable and actionable intelligence**.
 
 ---
 
@@ -35,7 +41,7 @@ The system transforms complex, multi-domain uncertainty into **quantifiable and 
 Analyzes decision inputs using integrated economic, political, and social indicators.
 
 ### 2. Risk Scoring Model
-Converts uncertainty into a structured, interpretable, and comparable score.
+Transforms uncertainty into a structured, interpretable, and comparable score.
 
 ### 3. Protocol Layer (GDP™)
 Defines standardized rules for evaluation, validation, and decision logic.
@@ -56,7 +62,7 @@ Defines standardized rules for evaluation, validation, and decision logic.
 - Business Strategy & Market Expansion  
 - Public Policy & Governance Analysis  
 - Financial & Market Risk Assessment  
-- Strategic Planning and Decision Systems  
+- Strategic Planning Systems  
 
 ---
 
@@ -73,7 +79,7 @@ Defines standardized rules for evaluation, validation, and decision logic.
 ---
 
 ## System Status
-GDSN-X™ is under **active development**, with continuous enhancements in modeling precision, analytical depth, and system capabilities.
+GDSN-X™ is under **active development**, with continuous improvements in modeling accuracy, analytical depth, and system capabilities.
 
 ---
 
@@ -116,5 +122,5 @@ Independent Researcher — Decision Intelligence, AI Systems, Strategic Governan
 
 ## Disclaimer
 
-This system provides analytical insights for decision support purposes only.  
-All final decisions and their consequences remain the responsibility of the user.
+This system provides analytical insights for decision-support purposes only.  
+All final decisions and their consequences remain the sole responsibility of the user.

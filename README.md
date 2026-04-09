@@ -4,48 +4,60 @@
 
 # GDSN-X™ — Decision Intelligence System
 
-## 🌐 Live System
-Access the live platform:  
+🌐 Live Platform  
 https://gdsn-x-decision-intelligence-system-hcme9we9bncdwuftarjysm.streamlit.app/
 
 ---
 
 ## Overview
-**GDSN-X™** is a next-generation decision intelligence system designed to evaluate **risk, stability, and strategic impact** across business, policy, and global environments.
 
-The system integrates **economic, political, and social dimensions** into a unified analytical architecture for **high-stakes strategic decision-making**.
+GDSN-X™ is a next-generation decision intelligence system designed to evaluate risk, stability, and strategic impact across business, policy, and global environments.
+
+The platform integrates **economic, political, and social dimensions** into a unified analytical framework for **high-stakes decision-making**.
 
 ---
 
 ## Problem
-Modern decision environments lack a **standardized and structured framework** to evaluate:
+
+Modern decision environments lack a standardized system to evaluate:
 
 - Risk exposure  
 - System stability  
 - Long-term strategic consequences  
 
-This gap leads to **financial loss, policy failure, and systemic miscalculation** across institutions and markets.
+This gap leads to:
+
+- Financial losses  
+- Policy failures  
+- Strategic miscalculations  
 
 ---
 
 ## Solution
-GDSN-X™ introduces a **multi-layered decision evaluation architecture** that delivers:
+
+GDSN-X™ introduces a structured decision intelligence architecture that delivers:
 
 - **Risk Score (0–100)**  
-- **Stability Assessment**  
+- **Risk Level Classification**  
+- **Primary & Secondary Risk Insight**  
+- **Risk Profile Tag**  
 - **Strategic Recommendation**  
 
-The system transforms complex, multi-domain uncertainty into **quantifiable and actionable intelligence**.
+The system transforms complex, multi-domain uncertainty into **quantifiable, structured, and actionable intelligence**.
 
 ---
 
 ## Core Architecture
 
 ### 1. Decision Engine
-Analyzes decision inputs using integrated economic, political, and social indicators.
+Processes inputs using a weighted multi-factor risk model:
+
+- Economic Risk → 40%  
+- Political Risk → 35%  
+- Social Risk → 25%  
 
 ### 2. Risk Scoring Model
-Transforms uncertainty into a structured, interpretable, and comparable score.
+Converts qualitative uncertainty into a structured and comparable numerical score.
 
 ### 3. Protocol Layer (GDP™)
 Defines standardized rules for evaluation, validation, and decision logic.
@@ -55,9 +67,10 @@ Defines standardized rules for evaluation, validation, and decision logic.
 ## Key Capabilities
 
 - Multi-dimensional risk modeling  
-- Scenario simulation and comparative analytics  
-- Decision intelligence for policy and strategy  
-- Structured, exportable analytical outputs  
+- Scenario comparison & simulation  
+- Structured decision outputs  
+- Exportable analytical reports  
+- Real-time interactive dashboard  
 
 ---
 
@@ -65,30 +78,45 @@ Defines standardized rules for evaluation, validation, and decision logic.
 
 - Business Strategy & Market Expansion  
 - Public Policy & Governance Analysis  
-- Financial & Market Risk Assessment  
-- Strategic Planning Systems  
+- Financial & Investment Risk Assessment  
+- Strategic Planning & Advisory  
 
 ---
 
 ## Example Output
 
 **Input:**  
-`Expand business to a new market`
+Expand business to a new market  
 
 **Output:**  
 
-- Risk Score: 62  
-- Stability: Medium Risk  
-- Recommendation: Proceed with caution  
+Risk Score: 62  
+Risk Level: Medium Risk  
+
+Primary Risk: Political (70)  
+Secondary Risk: Economic (60)  
+
+Risk Profile: High Political Exposure  
+
+Recommendation:  
+Proceed with a controlled strategy or phased market entry  
 
 ---
 
 ## System Status
-GDSN-X™ is under **active development**, with continuous improvements in modeling accuracy, analytical depth, and system capabilities.
+
+GDSN-X™ is actively evolving with continuous improvements in:
+
+- Model accuracy  
+- Analytical depth  
+- System scalability  
+- Decision intelligence capabilities  
 
 ---
 
 ## Services
+
+We provide:
 
 - Decision Risk Analysis  
 - Strategic Advisory Reports  
@@ -98,9 +126,7 @@ GDSN-X™ is under **active development**, with continuous improvements in model
 
 ## Contact
 
-For collaboration, research, or consulting inquiries:
-
-📩 Email: **bumbamazumdar2017@gmail.com**
+📩 Email: bumbamazumdar2017@gmail.com  
 
 ---
 
@@ -108,13 +134,9 @@ For collaboration, research, or consulting inquiries:
 
 **Proprietary License (Source-Available)**
 
-This project is protected under a custom proprietary license.
-
-- Non-commercial use is permitted for research and educational purposes only  
-- Commercial use, resale, or redistribution is strictly prohibited  
-- The author retains full and exclusive commercial rights  
-
-**Note:** This is a *source-available system*, not open-source software.
+- Non-commercial use permitted for research and educational purposes  
+- Commercial use, redistribution, or resale requires explicit authorization  
+- Full and exclusive commercial rights retained by the author  
 
 ---
 
@@ -127,5 +149,6 @@ Independent Researcher — Decision Intelligence, AI Systems, Strategic Governan
 
 ## Disclaimer
 
-This system provides analytical insights for decision-support purposes only.  
-All final decisions and their consequences remain the sole responsibility of the user.
+This system provides analytical insights for **decision-support purposes only**.
+
+All final decisions and their outcomes remain the sole responsibility of the user.

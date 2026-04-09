@@ -7,7 +7,12 @@ import pandas as pd
 # 🔹 PATH CONFIG
 # =========================
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from system.decision_engine import risk_score, risk_insight, risk_recommendation
+from system.decision_engine import (
+    risk_score,
+    risk_insight,
+    risk_recommendation,
+    risk_profile
+)
 
 # =========================
 # 🔹 PAGE CONFIG
@@ -69,7 +74,8 @@ if menu == "Single Analysis":
         else:
             score, level = risk_score(economic, political, social)
             insight = risk_insight(economic, political, social)
-            recommendation = risk_recommendation(level)
+            profile = risk_profile(economic, political, social)
+            recommendation = risk_recommendation(level, economic, political, social)
 
             st.markdown("---")
             st.markdown("## 📊 Analysis Summary")
@@ -82,6 +88,7 @@ if menu == "Single Analysis":
             with col2:
                 st.metric("Risk Level", level)
 
+            # Risk level display
             if level == "High Risk":
                 st.error("🔴 High Risk Detected")
             elif level == "Medium Risk":
@@ -89,8 +96,11 @@ if menu == "Single Analysis":
             else:
                 st.success("🟢 Low Risk")
 
+            # Insight + Profile
             st.info(insight)
+            st.info(profile)
 
+            # Recommendation
             if level == "High Risk":
                 st.error(f"🚫 {recommendation}")
             elif level == "Medium Risk":
@@ -98,6 +108,7 @@ if menu == "Single Analysis":
             else:
                 st.success(f"✅ {recommendation}")
 
+            # Save history
             st.session_state.history.append({
                 "score": score,
                 "level": level,
@@ -105,6 +116,7 @@ if menu == "Single Analysis":
                 "project": project_name
             })
 
+            # Report
             report = f"""
 GDSN-X™ Decision Intelligence Report
 ------------------------------------
@@ -115,6 +127,7 @@ Risk Score: {score}
 Risk Level: {level}
 
 {insight}
+Risk Profile: {profile}
 
 Recommendation:
 {recommendation}

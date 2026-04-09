@@ -1,3 +1,7 @@
+![Status](https://img.shields.io/badge/status-active-success)
+![License](https://img.shields.io/badge/license-proprietary-red)
+![Python](https://img.shields.io/badge/python-3.x-blue)
+
 # GDSN-X™ — Decision Intelligence System
 
 ## 🌐 Live System
@@ -9,7 +13,7 @@ https://gdsn-x-decision-intelligence-system-hcme9we9bncdwuftarjysm.streamlit.app
 ## Overview
 **GDSN-X™** is a next-generation decision intelligence system designed to evaluate **risk, stability, and strategic impact** across business, policy, and global environments.
 
-The system integrates **economic, political, and social dimensions** into a unified analytical architecture for **high-stakes and strategic decision-making**.
+The system integrates **economic, political, and social dimensions** into a unified analytical architecture for **high-stakes strategic decision-making**.
 
 ---
 
@@ -20,7 +24,7 @@ Modern decision environments lack a **standardized and structured framework** to
 - System stability  
 - Long-term strategic consequences  
 
-This gap leads to **financial losses, policy failures, and systemic miscalculations** across institutions and markets.
+This gap leads to **financial loss, policy failure, and systemic miscalculation** across institutions and markets.
 
 ---
 
@@ -31,7 +35,7 @@ GDSN-X™ introduces a **multi-layered decision evaluation architecture** that d
 - **Stability Assessment**  
 - **Strategic Recommendation**  
 
-The system converts complex, multi-domain uncertainty into **quantifiable and actionable intelligence**.
+The system transforms complex, multi-domain uncertainty into **quantifiable and actionable intelligence**.
 
 ---
 
@@ -53,7 +57,7 @@ Defines standardized rules for evaluation, validation, and decision logic.
 - Multi-dimensional risk modeling  
 - Scenario simulation and comparative analytics  
 - Decision intelligence for policy and strategy  
-- Structured and exportable analytical outputs  
+- Structured, exportable analytical outputs  
 
 ---
 
@@ -72,6 +76,7 @@ Defines standardized rules for evaluation, validation, and decision logic.
 `Expand business to a new market`
 
 **Output:**  
+
 - Risk Score: 62  
 - Stability: Medium Risk  
 - Recommendation: Proceed with caution  

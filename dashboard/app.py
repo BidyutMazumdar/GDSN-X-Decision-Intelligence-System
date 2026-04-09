@@ -1,4 +1,10 @@
 import streamlit as st
+import sys
+import os
+
+# 🔥 FIX: Add root path so 'system' module works
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from system.decision_engine import risk_score, risk_insight, risk_recommendation
 
 # Page config
@@ -49,9 +55,7 @@ if st.button("Run Analysis"):
     else:
         st.success(f"✅ {recommendation}")
 
-    # -----------------------------
-    # 📄 REPORT GENERATION (NEW)
-    # -----------------------------
+    # 📄 Report
     report = f"""
 GDSN-X™ Decision Intelligence Report
 
@@ -65,7 +69,7 @@ Recommendation:
 ------------------------------------
 """
 
-    # 📥 Download Button
+    # 📥 Download
     st.download_button(
         label="📥 Download Report",
         data=report,
@@ -73,6 +77,6 @@ Recommendation:
         mime="text/plain"
     )
 
-    # 🧾 Report Preview
+    # 🧾 Preview
     st.markdown("### Full Report Preview")
     st.code(report)

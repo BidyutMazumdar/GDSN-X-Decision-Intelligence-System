@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 import os
 import pandas as pd
+import datetime
 
 # =========================
 # 🔹 PATH CONFIG
@@ -43,11 +44,25 @@ st.sidebar.markdown("## Client Details")
 client_name = st.sidebar.text_input("Client Name")
 project_name = st.sidebar.text_input("Project Name")
 
+use_case = st.sidebar.selectbox(
+    "Use Case",
+    ["Business Expansion", "Investment Decision", "Policy Analysis"]
+)
+
 # =========================
 # 🔹 SESSION STATE
 # =========================
 if "history" not in st.session_state:
     st.session_state.history = []
+
+# =========================
+# 🔹 COUNTRY DATA
+# =========================
+country_data = {
+    "India": {"economic": 60, "political": 55, "social": 50},
+    "USA": {"economic": 40, "political": 45, "social": 50},
+    "China": {"economic": 70, "political": 75, "social": 65}
+}
 
 # =========================
 # 🔹 SINGLE ANALYSIS
@@ -56,9 +71,19 @@ if menu == "Single Analysis":
 
     st.markdown("## Risk Input Panel")
 
-    economic = st.slider("Economic Risk", 0, 100, 50)
-    political = st.slider("Political Risk", 0, 100, 50)
-    social = st.slider("Social Risk", 0, 100, 50)
+    mode = st.radio("Input Mode", ["Manual", "Country Data"])
+
+    if mode == "Manual":
+        economic = st.slider("Economic Risk", 0, 100, 50)
+        political = st.slider("Political Risk", 0, 100, 50)
+        social = st.slider("Social Risk", 0, 100, 50)
+    else:
+        country = st.selectbox("Select Country", list(country_data.keys()))
+        economic = country_data[country]["economic"]
+        political = country_data[country]["political"]
+        social = country_data[country]["social"]
+
+        st.info(f"Using preset data for {country}")
 
     st.markdown("### Risk Breakdown")
     st.bar_chart({
@@ -88,7 +113,7 @@ if menu == "Single Analysis":
             with col2:
                 st.metric("Risk Level", level)
 
-            # Risk level display
+            # Risk Display
             if level == "High Risk":
                 st.error("🔴 High Risk Detected")
             elif level == "Medium Risk":
@@ -108,29 +133,39 @@ if menu == "Single Analysis":
             else:
                 st.success(f"✅ {recommendation}")
 
-            # Save history
+            # Save history (WITH TIMESTAMP)
             st.session_state.history.append({
                 "score": score,
                 "level": level,
                 "client": client_name,
-                "project": project_name
+                "project": project_name,
+                "use_case": use_case,
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
             })
 
-            # Report
+            # EXECUTIVE REPORT
             report = f"""
 GDSN-X™ Decision Intelligence Report
 ------------------------------------
 Client: {client_name}
 Project: {project_name}
+Use Case: {use_case}
 
 Risk Score: {score}
 Risk Level: {level}
 
+Insight:
 {insight}
-Risk Profile: {profile}
 
-Recommendation:
+Risk Profile:
+{profile}
+
+Strategic Recommendation:
 {recommendation}
+
+Conclusion:
+This decision falls under {level} category and requires structured evaluation.
+
 ------------------------------------
 """
 
@@ -150,6 +185,9 @@ Recommendation:
 elif menu == "Scenario Comparison":
 
     st.markdown("## 🔄 Scenario Comparison")
+
+    name_a = st.text_input("Scenario A Name")
+    name_b = st.text_input("Scenario B Name")
 
     col1, col2 = st.columns(2)
 
@@ -172,20 +210,20 @@ elif menu == "Scenario Comparison":
 
         st.subheader("Comparison Result")
 
-        st.metric("Scenario A Score", score_a)
-        st.metric("Scenario B Score", score_b)
+        st.metric(name_a or "Scenario A", score_a)
+        st.metric(name_b or "Scenario B", score_b)
 
         chart_data = pd.DataFrame({
-            "Scenario": ["A", "B"],
+            "Scenario": [name_a or "A", name_b or "B"],
             "Risk Score": [score_a, score_b]
         })
 
         st.bar_chart(chart_data.set_index("Scenario"))
 
         if score_a < score_b:
-            st.success("✅ Scenario A is safer")
+            st.success(f"✅ {name_a or 'Scenario A'} is safer")
         elif score_b < score_a:
-            st.success("✅ Scenario B is safer")
+            st.success(f"✅ {name_b or 'Scenario B'} is safer")
         else:
             st.info("Both scenarios are equal risk")
 
@@ -197,9 +235,22 @@ elif menu == "History":
     st.markdown("## 📊 Previous Scores")
 
     if st.session_state.history:
-        scores = [item["score"] for item in st.session_state.history]
-        st.line_chart(scores)
-        st.dataframe(pd.DataFrame(st.session_state.history))
+        df = pd.DataFrame(st.session_state.history)
+
+        # Line chart
+        st.line_chart(df["score"])
+
+        # Table
+        st.markdown("### Detailed History Table")
+        st.dataframe(df)
+
+        # CSV DOWNLOAD (FINAL FIXED)
+        st.download_button(
+            label="📥 Download History CSV",
+            data=df.to_csv(index=False),
+            file_name="GDSN-X_History.csv",
+            mime="text/csv"
+        )
     else:
         st.write("No history yet.")
 
@@ -207,4 +258,4 @@ elif menu == "History":
 # 🔹 FOOTER
 # =========================
 st.markdown("---")
-st.caption("© GDSN-X™ | Decision Intelligence Platform v1.0")
+st.caption("© GDSN-X™ | Decision Intelligence Platform v2.0")

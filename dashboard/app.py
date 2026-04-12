@@ -258,4 +258,4 @@ elif menu == "History":
 # 🔹 FOOTER
 # =========================
 st.markdown("---")
-st.caption("© GDSN-X™ | Decision Intelligence Platform v2.0")
+st.caption("© GDSN-X™ | Decision Intelligence Platform V1.0")

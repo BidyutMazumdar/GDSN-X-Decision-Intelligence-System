@@ -1,12 +1,13 @@
-from typing import Tuple
+from typing import Tuple, Dict
 import statistics
 
-# ================= VALIDATION =================
-def validate_inputs(economic, political, social):
-    for v in (economic, political, social):
+# =========================
+# VALIDATION
+# =========================
+def validate_inputs(*values):
+    for v in values:
         if not (0 <= v <= 100):
-            raise ValueError("Inputs must be 0–100")
-
+            raise ValueError("All inputs must be between 0–100")
 
 def safe(v):
     try:
@@ -15,15 +16,82 @@ def safe(v):
         return 0.0
 
 
-# ================= CORE SCORE =================
-def risk_score(economic, political, social) -> Tuple[float, str]:
+# =========================
+# DYNAMIC WEIGHTS
+# =========================
+def get_weights(use_case: str) -> Dict[str, float]:
 
-    economic, political, social = safe(economic), safe(political), safe(social)
+    if use_case == "Investment Decision":
+        return {"E": 0.30, "P": 0.20, "S": 0.15, "T": 0.15, "Env": 0.10, "L": 0.10}
 
-    validate_inputs(economic, political, social)
+    elif use_case == "Policy Analysis":
+        return {"E": 0.15, "P": 0.30, "S": 0.20, "T": 0.10, "Env": 0.15, "L": 0.10}
 
-    score = (0.4 * economic) + (0.35 * political) + (0.25 * social)
+    elif use_case == "Business Expansion":
+        return {"E": 0.35, "P": 0.20, "S": 0.15, "T": 0.10, "Env": 0.10, "L": 0.10}
 
+    # Default
+    return {"E": 0.25, "P": 0.20, "S": 0.20, "T": 0.15, "Env": 0.10, "L": 0.10}
+
+
+# =========================
+# STRATEGY MODE
+# =========================
+def apply_strategy(score: float, strategy: str) -> float:
+
+    if strategy == "Conservative":
+        return score + 5
+
+    elif strategy == "Aggressive":
+        return score - 5
+
+    return score
+
+
+# =========================
+# CORE RISK MODEL (ELITE)
+# =========================
+def risk_score(
+    economic, political, social,
+    tech, env, legal,
+    use_case="Balanced",
+    strategy="Balanced"
+) -> Tuple[float, str, Dict]:
+
+    # Safe cast
+    e, p, s = safe(economic), safe(political), safe(social)
+    t, en, l = safe(tech), safe(env), safe(legal)
+
+    validate_inputs(e, p, s, t, en, l)
+
+    # Weights
+    w = get_weights(use_case)
+
+    # Contribution breakdown
+    contributions = {
+        "Economic": round(w["E"] * e, 2),
+        "Political": round(w["P"] * p, 2),
+        "Social": round(w["S"] * s, 2),
+        "Technological": round(w["T"] * t, 2),
+        "Environmental": round(w["Env"] * en, 2),
+        "Legal": round(w["L"] * l, 2),
+    }
+
+    # Base score
+    score = sum(contributions.values())
+
+    # Non-linear penalty
+    extreme_flag = any(v > 80 for v in [e, p, s, t, en, l])
+    if extreme_flag:
+        score += 7
+
+    # Strategy adjustment
+    score = apply_strategy(score, strategy)
+
+    # Clamp
+    score = max(0, min(score, 100))
+
+    # Risk level
     if score < 40:
         level = "Low Risk"
     elif score < 70:
@@ -31,82 +99,186 @@ def risk_score(economic, political, social) -> Tuple[float, str]:
     else:
         level = "High Risk"
 
-    return round(score, 2), level
+    meta = {
+        "weights": w,
+        "contributions": contributions,
+        "extreme_risk": extreme_flag
+    }
+
+    return round(score, 2), level, meta
 
 
-# ================= INSIGHT =================
-def risk_insight(economic, political, social):
+# =========================
+# BACKWARD COMPATIBILITY
+# =========================
+def risk_score_simple(*args, **kwargs):
+    score, level, _ = risk_score(*args, **kwargs)
+    return score, level
+
+
+# =========================
+# EXPLAINABILITY (ELITE AI FEEL)
+# =========================
+def explain_score(meta):
+
+    contributions = meta["contributions"]
+    total = sum(contributions.values())
+
+    breakdown = {
+        k: round((v / total) * 100, 1)
+        for k, v in contributions.items()
+    }
+
+    sorted_items = sorted(breakdown.items(), key=lambda x: x[1], reverse=True)
+
+    top = sorted_items[0]
+    second = sorted_items[1]
+
+    return (
+        f"Risk is primarily driven by {top[0]} ({top[1]}%) "
+        f"followed by {second[0]} ({second[1]}%)."
+    )
+
+
+# =========================
+# INSIGHT
+# =========================
+def risk_insight(e, p, s, t, en, l):
 
     data = {
-        "Economic": economic,
-        "Political": political,
-        "Social": social
+        "Economic": e,
+        "Political": p,
+        "Social": s,
+        "Technological": t,
+        "Environmental": en,
+        "Legal": l
     }
 
     sorted_data = sorted(data.items(), key=lambda x: x[1], reverse=True)
 
-    return f"Primary: {sorted_data[0][0]} | Secondary: {sorted_data[1][0]}"
+    return f"Primary Driver: {sorted_data[0][0]} | Secondary: {sorted_data[1][0]}"
 
 
-# ================= PROFILE =================
-def risk_profile(economic, political, social):
+# =========================
+# PROFILE
+# =========================
+def risk_profile(e, p, s, t, en, l):
 
-    if political > 75:
+    if p > 75:
         return "Geopolitical Fragility"
-    elif economic > 75:
-        return "Economic Instability"
-    elif social > 75:
-        return "Social Disruption"
-    return "Balanced"
+    if e > 75:
+        return "Macroeconomic Instability"
+    if t > 75:
+        return "Technological Disruption Risk"
+    if en > 75:
+        return "Environmental Exposure Risk"
+    if l > 75:
+        return "Regulatory / Legal Uncertainty"
+
+    return "Balanced Multi-Factor Risk"
 
 
-# ================= VOLATILITY =================
-def risk_volatility(economic, political, social):
+# =========================
+# VOLATILITY
+# =========================
+def risk_volatility(e, p, s, t, en, l):
+    return round(statistics.pstdev([e, p, s, t, en, l]), 2)
 
-    values = [economic, political, social]
-    return round(statistics.pstdev(values), 2)
 
+# =========================
+# DATA CONFIDENCE (STRUCTURED)
+# =========================
+def data_confidence(e, p, s, t, en, l):
 
-# ================= CONFIDENCE =================
-def data_confidence(economic, political, social):
+    values = [e, p, s, t, en, l]
+    variance = max(values) - min(values)
 
-    values = [economic, political, social]
+    score = 100 - variance
 
     if any(v == 0 for v in values):
-        return "Low"
-    elif max(values) - min(values) > 50:
-        return "Medium"
-    return "High"
+        score -= 15
 
-
-def decision_confidence(score):
+    score = max(0, min(round(score, 2), 100))
 
     if score > 75:
-        return "Low Confidence"
+        label = "High Confidence"
     elif score > 50:
-        return "Medium Confidence"
-    return "High Confidence"
+        label = "Moderate Confidence"
+    else:
+        label = "Low Confidence"
+
+    return {"score": score, "label": label}
 
 
-# ================= AI INSIGHT =================
-def smart_insight(score, level, e, p, s):
+# =========================
+# DECISION CONFIDENCE
+# =========================
+def decision_confidence(score):
+    return round(100 - abs(score - 50), 2)
+
+
+# =========================
+# SMART INSIGHT
+# =========================
+def smart_insight(score, level, e, p, s, t, en, l):
 
     if level == "High Risk":
-        return "High systemic risk detected. Defensive strategy required."
+        return (
+            "High systemic risk driven by multi-factor instability. "
+            "Structural weaknesses detected. Entry should be delayed or risk-mitigated."
+        )
 
-    if level == "Medium Risk":
-        return "Moderate risk environment. Controlled execution advised."
+    elif level == "Medium Risk":
+        return (
+            "Moderate risk with uneven factor distribution. "
+            "Opportunities exist with controlled execution."
+        )
 
-    return "Stable environment. Growth opportunity detected."
+    return (
+        "Low systemic risk with stable macro indicators. "
+        "Favorable for expansion and long-term investment."
+    )
 
 
-# ================= RECOMMENDATION =================
-def risk_recommendation(level, e, p, s):
+# =========================
+# RECOMMENDATION
+# =========================
+def risk_recommendation(level, strategy):
 
+    if strategy == "Conservative":
+        if level == "High Risk":
+            return "Avoid entry or delay decision"
+        elif level == "Medium Risk":
+            return "Enter cautiously with safeguards"
+        return "Proceed with caution"
+
+    elif strategy == "Aggressive":
+        if level == "High Risk":
+            return "High-risk, high-reward scenario"
+        elif level == "Medium Risk":
+            return "Capture early advantage"
+        return "Expand aggressively"
+
+    # Balanced
     if level == "High Risk":
-        return "Avoid or reduce exposure"
-
-    if level == "Medium Risk":
+        return "Reduce exposure and reassess"
+    elif level == "Medium Risk":
         return "Phased execution recommended"
+    return "Proceed under normal conditions"
 
-    return "Proceed normally"
+
+# =========================
+# DECISION SUMMARY (FINAL LAYER)
+# =========================
+def decision_summary(score, level, confidence):
+
+    return {
+        "score": score,
+        "risk_level": level,
+        "confidence": confidence,
+        "decision": (
+            "Proceed" if level == "Low Risk"
+            else "Caution" if level == "Medium Risk"
+            else "Avoid"
+        )
+    }

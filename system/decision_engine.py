@@ -30,7 +30,7 @@ def get_weights(use_case: str) -> Dict[str, float]:
     elif use_case == "Business Expansion":
         return {"E": 0.35, "P": 0.20, "S": 0.15, "T": 0.10, "Env": 0.10, "L": 0.10}
 
-    # Default
+    # Default (Balanced)
     return {"E": 0.25, "P": 0.20, "S": 0.20, "T": 0.15, "Env": 0.10, "L": 0.10}
 
 
@@ -41,7 +41,6 @@ def apply_strategy(score: float, strategy: str) -> float:
 
     if strategy == "Conservative":
         return score + 5
-
     elif strategy == "Aggressive":
         return score - 5
 
@@ -49,7 +48,7 @@ def apply_strategy(score: float, strategy: str) -> float:
 
 
 # =========================
-# CORE RISK MODEL (ELITE)
+# CORE RISK MODEL
 # =========================
 def risk_score(
     economic, political, social,
@@ -67,7 +66,7 @@ def risk_score(
     # Weights
     w = get_weights(use_case)
 
-    # Contribution breakdown
+    # Contributions
     contributions = {
         "Economic": round(w["E"] * e, 2),
         "Political": round(w["P"] * p, 2),
@@ -117,26 +116,56 @@ def risk_score_simple(*args, **kwargs):
 
 
 # =========================
-# EXPLAINABILITY (ELITE AI FEEL)
+# EXPLAINABILITY (FINAL ELITE)
 # =========================
 def explain_score(meta):
 
-    contributions = meta["contributions"]
-    total = sum(contributions.values())
+    # Safe extraction
+    contributions = meta.get("contributions", {})
 
+    if not contributions:
+        return "No contribution data available for explanation."
+
+    # Zero division safe
+    total = sum(contributions.values()) or 1
+
+    # Normalize
     breakdown = {
         k: round((v / total) * 100, 1)
         for k, v in contributions.items()
     }
 
-    sorted_items = sorted(breakdown.items(), key=lambda x: x[1], reverse=True)
+    # Sort
+    sorted_items = sorted(
+        breakdown.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
 
-    top = sorted_items[0]
-    second = sorted_items[1]
+    # Edge cases
+    if len(sorted_items) == 1:
+        return f"Risk is driven entirely by {sorted_items[0][0]}."
+
+    if len(sorted_items) < 2:
+        return "Insufficient data for full explanation."
+
+    # Top drivers
+    top, second = sorted_items[0], sorted_items[1]
+
+    # Concentration logic
+    concentration = round(top[1] + second[1], 1)
+
+    if concentration > 70:
+        intensity = "highly concentrated"
+    elif concentration > 50:
+        intensity = "moderately concentrated"
+    else:
+        intensity = "diversified"
 
     return (
-        f"Risk is primarily driven by {top[0]} ({top[1]}%) "
-        f"followed by {second[0]} ({second[1]}%)."
+        f"Risk is primarily driven by {top[0]} ({top[1]}%), "
+        f"followed by {second[0]} ({second[1]}%). "
+        f"Overall risk structure is {intensity}."
     )
 
 
@@ -186,7 +215,7 @@ def risk_volatility(e, p, s, t, en, l):
 
 
 # =========================
-# DATA CONFIDENCE (STRUCTURED)
+# DATA CONFIDENCE
 # =========================
 def data_confidence(e, p, s, t, en, l):
 
@@ -268,7 +297,7 @@ def risk_recommendation(level, strategy):
 
 
 # =========================
-# DECISION SUMMARY (FINAL LAYER)
+# DECISION SUMMARY
 # =========================
 def decision_summary(score, level, confidence):
 

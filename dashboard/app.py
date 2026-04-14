@@ -3,6 +3,7 @@ import pandas as pd
 import sys
 import os
 import plotly.graph_objects as go
+import plotly.express as px
 
 # ================= PATH CONFIG =================
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,20 +26,21 @@ try:
         explain_score
     )
     from system.report_engine import generate_pdf
+    from system.simulation import run_simulation  # ✅ NEW
 except Exception as e:
     st.error(f"❌ System import failed: {e}")
     st.stop()
 
 # ================= CONFIG =================
 st.set_page_config(
-    page_title="GDSN-X™ v2.3 ELITE",
+    page_title="GDSN-X™ v2.4 ELITE",
     layout="wide"
 )
 
 # ================= HEADER =================
 st.title("🧠 GDSN-X™ Decision Intelligence Platform")
-st.caption("v2.3 ELITE • Multi-Factor • Explainable • Consulting-Grade Engine")
-st.caption("⚠️ Deterministic model. Not financial advice.")
+st.caption("v2.4 ELITE • Probabilistic • Explainable • Consulting-Grade Engine")
+st.caption("⚠️ Deterministic + Monte Carlo Model. Not financial advice.")
 
 # ================= SIDEBAR =================
 st.sidebar.header("🧾 Configuration")
@@ -165,7 +167,7 @@ if st.button("🚀 Run Full Analysis", use_container_width=True):
     confidence = data_confidence(economic, political, social, tech, env, legal)
     decision_conf = decision_confidence(score)
 
-    # ✅ CLEAN FIX (READABILITY IMPROVEMENT)
+    # ✅ CLEAN ANALYSIS
     analysis = smart_insight(
         score, level,
         economic, political, social, tech, env, legal
@@ -253,6 +255,28 @@ Decision Confidence: {decision_conf}%
         file_name="GDSN_X_ELITE_Report.txt"
     )
 
+    # ================= MONTE CARLO =================
+    st.subheader("🎲 Monte Carlo Simulation")
+
+    sim = run_simulation(
+        economic, political, social,
+        tech, env, legal,
+        use_case,
+        strategy_mode,
+        iterations=1000
+    )
+
+    colX, colY, colZ = st.columns(3)
+    colX.metric("Mean Risk", sim["mean"])
+    colY.metric("Min Risk", sim["min"])
+    colZ.metric("Max Risk", sim["max"])
+
+    st.info(f"📊 Volatility (Std Dev): {sim['std_dev']}")
+    st.warning(f"⚠️ High Risk Probability: {sim['high_risk_probability']}%")
+
+    fig_sim = px.histogram(sim["distribution"], nbins=30)
+    st.plotly_chart(fig_sim, use_container_width=True)
+
 # ================= PDF REPORT =================
 if "result" in st.session_state:
 
@@ -270,7 +294,7 @@ if "result" in st.session_state:
             r["level"],
             r["decision_conf"],
             r["explanation"],
-            r["analysis"],  # ✅ CLEAN FIX USED HERE
+            r["analysis"],
             r["profile"],
             r["volatility"],
             r["confidence"]["label"],

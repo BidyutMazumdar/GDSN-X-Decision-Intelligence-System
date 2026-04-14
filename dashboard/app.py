@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
-import datetime
 import sys
 import os
 
-# ================= PATH FIX (CLOUD SAFE) =================
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, BASE_DIR)
+# ================= FINAL IMPORT FIX (CLOUD SAFE) =================
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 from system.decision_engine import (
     risk_score,
@@ -20,15 +22,14 @@ from system.decision_engine import (
 )
 
 # ================= CONFIG =================
-VERSION = "2.1 PRO"
 st.set_page_config(page_title="GDSN-X™ PRO", layout="centered")
 
-# ================= HEADER =================
 st.title("🧠 GDSN-X™ PRO Decision Intelligence")
-st.caption("Consulting-Grade Risk Intelligence Platform")
+st.caption("Production-Grade Risk Engine v2 PRO")
 
 # ================= SIDEBAR =================
-st.sidebar.markdown("## 🧾 Client Details")
+st.sidebar.header("Client Setup")
+
 client_name = st.sidebar.text_input("Client Name")
 project_name = st.sidebar.text_input("Project Name")
 
@@ -42,183 +43,70 @@ scenario_type = st.sidebar.selectbox(
     ["Stable Market", "Emerging Market", "High Risk Zone"]
 )
 
-pro_mode = st.sidebar.checkbox("🔒 Enable Pro Mode")
+pro_mode = st.sidebar.checkbox("Enable Pro Mode")
 
-# ================= PRICING =================
-st.sidebar.markdown("## 💰 Pricing")
-st.sidebar.info("""
-Free → Demo Analysis  
-₹999 → Standard Report  
-₹5000 → Premium Consulting  
-""")
+# ================= DATA =================
+df = pd.read_csv("data/country_risk.csv")
 
-# ================= DATA LOAD =================
-try:
-    df_country = pd.read_csv("data/country_risk.csv")
-except Exception:
-    st.error("❌ country_risk.csv not found in /data folder")
-    st.stop()
-
-# ================= CSV VALIDATION =================
-required_cols = {"country", "economic", "political", "social"}
-if not required_cols.issubset(df_country.columns):
-    st.error("❌ Invalid CSV format. Required columns missing.")
-    st.stop()
-
-# ================= COUNTRY SELECT =================
 country = st.selectbox(
-    "🌍 Select Country",
-    sorted(df_country["country"].dropna().unique())
+    "Select Country",
+    sorted(df["country"].dropna().unique())
 )
 
-filtered = df_country[df_country["country"] == country]
+row = df[df["country"] == country].iloc[0]
 
-if filtered.empty:
-    st.error("❌ Country data not found")
-    st.stop()
+economic = float(row["economic"])
+political = float(row["political"])
+social = float(row["social"])
 
-row = filtered.iloc[0]
-
-# ================= SAFE INT (FINAL FIX) =================
-def safe_int(value):
-    try:
-        return int(value)
-    except:
-        return 0
-
-economic = safe_int(row["economic"])
-political = safe_int(row["political"])
-social = safe_int(row["social"])
-
-# ================= SCENARIO IMPACT =================
+# ================= SCENARIO ADJUSTMENT =================
 if scenario_type == "High Risk Zone":
     economic = min(economic + 10, 100)
     political = min(political + 10, 100)
 elif scenario_type == "Emerging Market":
     economic = min(economic + 5, 100)
 
-# ================= UI =================
-st.subheader("📊 Risk Breakdown")
-
-st.progress(economic / 100)
-st.progress(political / 100)
-st.progress(social / 100)
-
-st.bar_chart({
-    "Economic": economic,
-    "Political": political,
-    "Social": social
-})
-
-# ================= INPUT VALIDATION =================
+# ================= VALIDATION =================
 if not client_name or not project_name:
-    st.warning("⚠️ Client Name and Project Name are required")
+    st.warning("Please fill client details")
     st.stop()
 
-# ================= ANALYSIS =================
-if st.button("🚀 Run Analysis", use_container_width=True):
+# ================= RUN =================
+if st.button("Run Analysis"):
 
     score, level = risk_score(economic, political, social)
 
-    insight = risk_insight(economic, political, social)
-    profile = risk_profile(economic, political, social)
-    recommendation = risk_recommendation(level, economic, political, social)
+    st.metric("Risk Score", score)
+    st.metric("Risk Level", level)
 
-    # ================= USE CASE INTELLIGENCE =================
-    if use_case == "Investment Decision":
-        recommendation += " Focus on ROI, capital efficiency, and downside protection."
-    elif use_case == "Policy Analysis":
-        recommendation += " Evaluate long-term governance and societal impact."
-    elif use_case == "Business Expansion":
-        recommendation += " Assess market entry barriers and competitive positioning."
+    st.progress(economic / 100)
+    st.progress(political / 100)
+    st.progress(social / 100)
 
-    # ================= ADVANCED METRICS =================
-    volatility = risk_volatility(economic, political, social)
-    decision_conf = decision_confidence(score)
-    confidence = data_confidence(economic, political, social)
-
-    # ================= DISPLAY =================
-    st.markdown("## 📈 Analysis Summary")
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Risk Score", score)
-    col2.metric("Risk Level", level)
-    col3.metric("Volatility Index", volatility)
-
-    # ================= RISK TAG =================
-    if score > 70:
-        st.error("🔴 CRITICAL RISK")
-    elif score > 50:
-        st.warning("🟠 ELEVATED RISK")
-    else:
-        st.success("🟢 STABLE")
-
-    # ================= INSIGHTS =================
-    st.info(insight)
+    st.info(risk_insight(economic, political, social))
     st.info(smart_insight(score, level, economic, political, social))
 
-    # ================= CONFIDENCE =================
-    st.info(f"📌 Data Confidence: {confidence}")
-    st.info(f"📊 Decision Confidence: {decision_conf}")
+    st.info(f"Profile: {risk_profile(economic, political, social)}")
+    st.info(f"Volatility: {risk_volatility(economic, political, social)}")
+    st.info(f"Data Confidence: {data_confidence(economic, political, social)}")
+    st.info(f"Decision Confidence: {decision_confidence(score)}")
 
-    # ================= RECOMMENDATION =================
-    st.success(recommendation)
-
-    # ================= REPORT =================
-    report = f"""
-===== GDSN-X™ PRO INTELLIGENCE REPORT =====
-
-Client: {client_name}
-Project: {project_name}
-Use Case: {use_case}
-Scenario Type: {scenario_type}
-
-Date: {datetime.datetime.now().strftime("%Y-%m-%d")}
-
---- EXECUTIVE SUMMARY ---
-Risk Score: {score}
-Risk Level: {level}
-Decision Confidence: {decision_conf}
-
---- CORE ANALYSIS ---
-{insight}
-
---- ADVANCED ANALYSIS ---
-{smart_insight(score, level, economic, political, social)}
-
---- RISK PROFILE ---
-{profile}
-
---- VOLATILITY ---
-Risk Volatility Index: {volatility}
-
---- DATA CONFIDENCE ---
-{confidence}
-
---- STRATEGIC RECOMMENDATION ---
-{recommendation}
-
---- FINAL VERDICT ---
-This scenario represents a {level} environment with {decision_conf}.
-
-===== END REPORT =====
-"""
-
-    # ================= DOWNLOAD =================
-    st.download_button(
-        label="📥 Download Report",
-        data=report.encode("utf-8"),
-        file_name="GDSN-X_PRO_Report.txt",
-        mime="text/plain"
+    st.success(
+        risk_recommendation(level, economic, political, social)
     )
 
-    # ================= PRO MODE =================
-    if not pro_mode:
-        st.warning("🔒 Pro Mode required to view full report preview")
-    else:
-        st.success("🔒 PRO MODE ACTIVE")
-        st.code(report)
+    report = f"""
+Client: {client_name}
+Project: {project_name}
+Score: {score}
+Level: {level}
+"""
 
-# ================= FOOTER =================
-st.divider()
-st.caption(f"© GDSN-X™ | Version {VERSION} — Consulting Intelligence System")
+    st.download_button(
+        "Download Report",
+        report,
+        file_name="gdsn_x_report.txt"
+    )
+
+    if pro_mode:
+        st.code(report)

@@ -1,46 +1,32 @@
 import streamlit as st
-import sys
-import os
 import pandas as pd
 import datetime
+import sys, os
 
-# =========================
-# 🔹 PATH CONFIG
-# =========================
+# ================= PATH =================
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from system.decision_engine import (
     risk_score,
     risk_insight,
     risk_recommendation,
-    risk_profile
+    risk_profile,
+    smart_insight,
+    data_confidence,
+    risk_volatility,
+    decision_confidence
 )
 
-# =========================
-# 🔹 PAGE CONFIG
-# =========================
-st.set_page_config(
-    page_title="GDSN-X™ Platform",
-    layout="centered"
-)
+# ================= CONFIG =================
+VERSION = "2.1 PRO"
+st.set_page_config(page_title="GDSN-X™ PRO", layout="centered")
 
-# =========================
-# 🔹 HEADER
-# =========================
-st.markdown("""
-# 🧠 GDSN-X™ Decision Intelligence Platform
-### Quantifying Risk. Powering Decisions.
----
-""")
+# ================= HEADER =================
+st.title("🧠 GDSN-X™ PRO Decision Intelligence")
+st.caption("Consulting-Grade Risk Intelligence Platform")
 
-# =========================
-# 🔹 SIDEBAR
-# =========================
-menu = st.sidebar.radio(
-    "Navigation",
-    ["Single Analysis", "Scenario Comparison", "History"]
-)
-
-st.sidebar.markdown("## Client Details")
+# ================= SIDEBAR =================
+st.sidebar.markdown("## 🧾 Client Details")
 client_name = st.sidebar.text_input("Client Name")
 project_name = st.sidebar.text_input("Project Name")
 
@@ -49,213 +35,180 @@ use_case = st.sidebar.selectbox(
     ["Business Expansion", "Investment Decision", "Policy Analysis"]
 )
 
-# =========================
-# 🔹 SESSION STATE
-# =========================
-if "history" not in st.session_state:
-    st.session_state.history = []
+scenario_type = st.sidebar.selectbox(
+    "Scenario Type",
+    ["Stable Market", "Emerging Market", "High Risk Zone"]
+)
 
-# =========================
-# 🔹 COUNTRY DATA
-# =========================
-country_data = {
-    "India": {"economic": 60, "political": 55, "social": 50},
-    "USA": {"economic": 40, "political": 45, "social": 50},
-    "China": {"economic": 70, "political": 75, "social": 65}
-}
+pro_mode = st.sidebar.checkbox("🔒 Enable Pro Mode")
 
-# =========================
-# 🔹 SINGLE ANALYSIS
-# =========================
-if menu == "Single Analysis":
+# Pricing
+st.sidebar.markdown("## 💰 Pricing")
+st.sidebar.info("""
+Free → Demo Analysis  
+₹999 → Standard Report  
+₹5000 → Premium Consulting  
+""")
 
-    st.markdown("## Risk Input Panel")
+# ================= DATA =================
+try:
+    df_country = pd.read_csv("data/country_risk.csv")
+except Exception:
+    st.error("❌ country_risk.csv not found in /data folder")
+    st.stop()
 
-    mode = st.radio("Input Mode", ["Manual", "Country Data"])
+# ✅ CSV VALIDATION
+required_cols = {"country", "economic", "political", "social"}
+if not required_cols.issubset(df_country.columns):
+    st.error("❌ Invalid CSV format. Required columns missing.")
+    st.stop()
 
-    if mode == "Manual":
-        economic = st.slider("Economic Risk", 0, 100, 50)
-        political = st.slider("Political Risk", 0, 100, 50)
-        social = st.slider("Social Risk", 0, 100, 50)
+# Country Selection
+country = st.selectbox("🌍 Select Country", df_country["country"])
+
+filtered = df_country[df_country["country"] == country]
+
+# ✅ EMPTY SAFETY
+if filtered.empty:
+    st.error("❌ Country data not found")
+    st.stop()
+
+row = filtered.iloc[0]
+
+economic = int(row["economic"])
+political = int(row["political"])
+social = int(row["social"])
+
+# ================= SCENARIO IMPACT =================
+if scenario_type == "High Risk Zone":
+    economic = min(economic + 10, 100)
+    political = min(political + 10, 100)
+elif scenario_type == "Emerging Market":
+    economic = min(economic + 5, 100)
+
+# ================= UI =================
+st.subheader("📊 Risk Breakdown")
+
+st.progress(economic / 100)
+st.progress(political / 100)
+st.progress(social / 100)
+
+st.bar_chart({
+    "Economic": economic,
+    "Political": political,
+    "Social": social
+})
+
+# ================= VALIDATION =================
+if not client_name or not project_name:
+    st.warning("⚠️ Client Name and Project Name are required")
+    st.stop()
+
+# ================= ANALYSIS =================
+if st.button("🚀 Run Analysis", use_container_width=True):
+
+    score, level = risk_score(economic, political, social)
+
+    insight = risk_insight(economic, political, social)
+    profile = risk_profile(economic, political, social)
+    recommendation = risk_recommendation(level, economic, political, social)
+
+    # ================= USE CASE INTELLIGENCE =================
+    if use_case == "Investment Decision":
+        recommendation += " Focus on ROI, capital efficiency, and downside protection."
+    elif use_case == "Policy Analysis":
+        recommendation += " Evaluate long-term governance and societal impact."
+    elif use_case == "Business Expansion":
+        recommendation += " Assess market entry barriers and competitive positioning."
+
+    # ================= ADVANCED METRICS =================
+    volatility = risk_volatility(economic, political, social)
+    decision_conf = decision_confidence(score)
+    confidence = data_confidence(economic, political, social)
+
+    # ================= DISPLAY =================
+    st.markdown("## 📈 Analysis Summary")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Risk Score", score)
+    col2.metric("Risk Level", level)
+    col3.metric("Volatility Index", volatility)
+
+    # Risk Tag
+    if score > 70:
+        st.error("🔴 CRITICAL RISK")
+    elif score > 50:
+        st.warning("🟠 ELEVATED RISK")
     else:
-        country = st.selectbox("Select Country", list(country_data.keys()))
-        economic = country_data[country]["economic"]
-        political = country_data[country]["political"]
-        social = country_data[country]["social"]
+        st.success("🟢 STABLE")
 
-        st.info(f"Using preset data for {country}")
+    # Insights
+    st.info(insight)
+    st.info(smart_insight(score, level, economic, political, social))
 
-    st.markdown("### Risk Breakdown")
-    st.bar_chart({
-        "Economic": economic,
-        "Political": political,
-        "Social": social
-    })
+    # Confidence
+    st.info(f"📌 Data Confidence: {confidence}")
+    st.info(f"📊 Decision Confidence: {decision_conf}")
 
-    if st.button("Run Analysis", use_container_width=True):
+    # Recommendation
+    st.success(recommendation)
 
-        if not client_name:
-            st.warning("Please enter Client Name for report")
-        else:
-            score, level = risk_score(economic, political, social)
-            insight = risk_insight(economic, political, social)
-            profile = risk_profile(economic, political, social)
-            recommendation = risk_recommendation(level, economic, political, social)
+    # ================= REPORT =================
+    report = f"""
+===== GDSN-X™ PRO INTELLIGENCE REPORT =====
 
-            st.markdown("---")
-            st.markdown("## 📊 Analysis Summary")
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.metric("Risk Score", score)
-
-            with col2:
-                st.metric("Risk Level", level)
-
-            # Risk Display
-            if level == "High Risk":
-                st.error("🔴 High Risk Detected")
-            elif level == "Medium Risk":
-                st.warning("🟠 Moderate Risk")
-            else:
-                st.success("🟢 Low Risk")
-
-            # Insight + Profile
-            st.info(insight)
-            st.info(profile)
-
-            # Recommendation
-            if level == "High Risk":
-                st.error(f"🚫 {recommendation}")
-            elif level == "Medium Risk":
-                st.warning(f"⚠️ {recommendation}")
-            else:
-                st.success(f"✅ {recommendation}")
-
-            # Save history (WITH TIMESTAMP)
-            st.session_state.history.append({
-                "score": score,
-                "level": level,
-                "client": client_name,
-                "project": project_name,
-                "use_case": use_case,
-                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            })
-
-            # EXECUTIVE REPORT
-            report = f"""
-GDSN-X™ Decision Intelligence Report
-------------------------------------
 Client: {client_name}
 Project: {project_name}
 Use Case: {use_case}
+Scenario Type: {scenario_type}
 
+Date: {datetime.datetime.now().strftime("%Y-%m-%d")}
+
+--- EXECUTIVE SUMMARY ---
 Risk Score: {score}
 Risk Level: {level}
+Decision Confidence: {decision_conf}
 
-Insight:
+--- CORE ANALYSIS ---
 {insight}
 
-Risk Profile:
+--- ADVANCED ANALYSIS ---
+{smart_insight(score, level, economic, political, social)}
+
+--- RISK PROFILE ---
 {profile}
 
-Strategic Recommendation:
+--- VOLATILITY ---
+Risk Volatility Index: {volatility}
+
+--- DATA CONFIDENCE ---
+{confidence}
+
+--- STRATEGIC RECOMMENDATION ---
 {recommendation}
 
-Conclusion:
-This decision falls under {level} category and requires structured evaluation.
+--- FINAL VERDICT ---
+This scenario represents a {level} environment with {decision_conf}.
 
-------------------------------------
+===== END REPORT =====
 """
 
-            st.download_button(
-                label="📥 Download Report",
-                data=report,
-                file_name="GDSN-X_Report.txt",
-                mime="text/plain"
-            )
+    # ✅ ENCODING FIX
+    st.download_button(
+        label="📥 Download Report",
+        data=report.encode("utf-8"),
+        file_name="GDSN-X_PRO_Report.txt",
+        mime="text/plain"
+    )
 
-            st.markdown("### Report Preview")
-            st.code(report)
-
-# =========================
-# 🔹 SCENARIO COMPARISON
-# =========================
-elif menu == "Scenario Comparison":
-
-    st.markdown("## 🔄 Scenario Comparison")
-
-    name_a = st.text_input("Scenario A Name")
-    name_b = st.text_input("Scenario B Name")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("### Scenario A")
-        econ_a = st.slider("Economic A", 0, 100, 50, key="econ_a")
-        pol_a = st.slider("Political A", 0, 100, 50, key="pol_a")
-        soc_a = st.slider("Social A", 0, 100, 50, key="soc_a")
-
-    with col2:
-        st.markdown("### Scenario B")
-        econ_b = st.slider("Economic B", 0, 100, 50, key="econ_b")
-        pol_b = st.slider("Political B", 0, 100, 50, key="pol_b")
-        soc_b = st.slider("Social B", 0, 100, 50, key="soc_b")
-
-    if st.button("Compare Scenarios", use_container_width=True):
-
-        score_a, _ = risk_score(econ_a, pol_a, soc_a)
-        score_b, _ = risk_score(econ_b, pol_b, soc_b)
-
-        st.subheader("Comparison Result")
-
-        st.metric(name_a or "Scenario A", score_a)
-        st.metric(name_b or "Scenario B", score_b)
-
-        chart_data = pd.DataFrame({
-            "Scenario": [name_a or "A", name_b or "B"],
-            "Risk Score": [score_a, score_b]
-        })
-
-        st.bar_chart(chart_data.set_index("Scenario"))
-
-        if score_a < score_b:
-            st.success(f"✅ {name_a or 'Scenario A'} is safer")
-        elif score_b < score_a:
-            st.success(f"✅ {name_b or 'Scenario B'} is safer")
-        else:
-            st.info("Both scenarios are equal risk")
-
-# =========================
-# 🔹 HISTORY
-# =========================
-elif menu == "History":
-
-    st.markdown("## 📊 Previous Scores")
-
-    if st.session_state.history:
-        df = pd.DataFrame(st.session_state.history)
-
-        # Line chart
-        st.line_chart(df["score"])
-
-        # Table
-        st.markdown("### Detailed History Table")
-        st.dataframe(df)
-
-        # CSV DOWNLOAD (FINAL FIXED)
-        st.download_button(
-            label="📥 Download History CSV",
-            data=df.to_csv(index=False),
-            file_name="GDSN-X_History.csv",
-            mime="text/csv"
-        )
+    # ================= PRO MODE =================
+    if not pro_mode:
+        st.warning("🔒 Pro Mode required to view full report preview")
     else:
-        st.write("No history yet.")
+        st.success("🔒 PRO MODE ACTIVE")
+        st.code(report)
 
-# =========================
-# 🔹 FOOTER
-# =========================
-st.markdown("---")
-st.caption("© GDSN-X™ | Decision Intelligence Platform V1.0")
+# ================= FOOTER =================
+st.divider()
+st.caption(f"© GDSN-X™ | Version {VERSION} — Consulting Intelligence System")

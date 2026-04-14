@@ -1,42 +1,23 @@
-"""
-GDSN-X™ Decision Intelligence System
-Core Risk Engine — v2 PRO (Production Grade)
-
-Author: Bidyut Mazumdar
-
-Upgrades:
-✔ Advanced scoring
-✔ Volatility index
-✔ Confidence modeling
-✔ Smart insights (AI-style)
-✔ Data robustness
-✔ Full compatibility with dashboard
-"""
-
 from typing import Tuple
 import statistics
 
-
-# =========================
-# 🔹 SAFE VALIDATION
-# =========================
-def validate_inputs(economic: float, political: float, social: float) -> None:
-    for value in (economic, political, social):
-        if not (0 <= value <= 100):
-            raise ValueError("Inputs must be between 0–100.")
+# ================= VALIDATION =================
+def validate_inputs(economic, political, social):
+    for v in (economic, political, social):
+        if not (0 <= v <= 100):
+            raise ValueError("Inputs must be 0–100")
 
 
-def safe(value):
+def safe(v):
     try:
-        return float(value)
-    except Exception:
+        return float(v)
+    except:
         return 0.0
 
 
-# =========================
-# 🔹 CORE SCORE
-# =========================
-def risk_score(economic: float, political: float, social: float) -> Tuple[float, str]:
+# ================= CORE SCORE =================
+def risk_score(economic, political, social) -> Tuple[float, str]:
+
     economic, political, social = safe(economic), safe(political), safe(social)
 
     validate_inputs(economic, political, social)
@@ -53,116 +34,79 @@ def risk_score(economic: float, political: float, social: float) -> Tuple[float,
     return round(score, 2), level
 
 
-# =========================
-# 🔹 INSIGHT ENGINE
-# =========================
-def risk_insight(economic: float, political: float, social: float) -> str:
-    risks = {
+# ================= INSIGHT =================
+def risk_insight(economic, political, social):
+
+    data = {
         "Economic": economic,
         "Political": political,
         "Social": social
     }
 
-    sorted_risks = sorted(risks.items(), key=lambda x: x[1], reverse=True)
+    sorted_data = sorted(data.items(), key=lambda x: x[1], reverse=True)
 
-    primary = sorted_risks[0]
-    secondary = sorted_risks[1]
-
-    return (
-        f"Primary Risk: {primary[0]} ({primary[1]}) | "
-        f"Secondary Risk: {secondary[0]} ({secondary[1]})"
-    )
+    return f"Primary: {sorted_data[0][0]} | Secondary: {sorted_data[1][0]}"
 
 
-# =========================
-# 🔹 RISK PROFILE
-# =========================
-def risk_profile(economic: float, political: float, social: float) -> str:
+# ================= PROFILE =================
+def risk_profile(economic, political, social):
+
     if political > 75:
         return "Geopolitical Fragility"
     elif economic > 75:
-        return "Macroeconomic Instability"
+        return "Economic Instability"
     elif social > 75:
-        return "Societal Disruption Risk"
-    else:
-        return "Balanced Risk Structure"
+        return "Social Disruption"
+    return "Balanced"
 
 
-# =========================
-# 🔹 VOLATILITY INDEX
-# =========================
-def risk_volatility(economic: float, political: float, social: float) -> float:
+# ================= VOLATILITY =================
+def risk_volatility(economic, political, social):
+
     values = [economic, political, social]
     return round(statistics.pstdev(values), 2)
 
 
-# =========================
-# 🔹 DATA CONFIDENCE
-# =========================
-def data_confidence(economic: float, political: float, social: float) -> str:
+# ================= CONFIDENCE =================
+def data_confidence(economic, political, social):
+
     values = [economic, political, social]
 
     if any(v == 0 for v in values):
-        return "Low (Incomplete Data)"
+        return "Low"
     elif max(values) - min(values) > 50:
-        return "Medium (High Variance)"
-    else:
-        return "High (Consistent Data)"
+        return "Medium"
+    return "High"
 
 
-# =========================
-# 🔹 DECISION CONFIDENCE
-# =========================
-def decision_confidence(score: float) -> str:
+def decision_confidence(score):
+
     if score > 75:
-        return "Low Confidence (High Risk Environment)"
+        return "Low Confidence"
     elif score > 50:
-        return "Moderate Confidence"
-    else:
-        return "High Confidence"
+        return "Medium Confidence"
+    return "High Confidence"
 
 
-# =========================
-# 🔹 SMART AI INSIGHT
-# =========================
-def smart_insight(score, level, economic, political, social) -> str:
+# ================= AI INSIGHT =================
+def smart_insight(score, level, e, p, s):
 
     if level == "High Risk":
-        return (
-            "Systemic instability detected. Multi-factor risk alignment suggests "
-            "high exposure. Strategic delay or defensive positioning recommended."
-        )
+        return "High systemic risk detected. Defensive strategy required."
 
-    elif level == "Medium Risk":
-        return (
-            "Moderate volatility environment. Selective optimization and phased "
-            "execution strategy advised to mitigate downside exposure."
-        )
+    if level == "Medium Risk":
+        return "Moderate risk environment. Controlled execution advised."
 
-    else:
-        return (
-            "Stable environment. Risk factors are controlled. Opportunity for "
-            "structured growth and capital deployment."
-        )
+    return "Stable environment. Growth opportunity detected."
 
 
-# =========================
-# 🔹 RECOMMENDATION ENGINE
-# =========================
-def risk_recommendation(level: str, economic: float, political: float, social: float) -> str:
+# ================= RECOMMENDATION =================
+def risk_recommendation(level, e, p, s):
 
     if level == "High Risk":
-        if political > 70:
-            return "Severe political instability. Avoid entry or delay decision."
-        elif economic > 70:
-            return "Economic volatility high. Reduce exposure and hedge risk."
-        elif social > 70:
-            return "Social unrest risk. Monitor behavioral indicators."
-        else:
-            return "Overall high risk. Re-evaluate full strategy."
+        return "Avoid or reduce exposure"
 
-    elif level == "Medium Risk":
-        return "Controlled execution recommended. Use phased investment strategy."
+    if level == "Medium Risk":
+        return "Phased execution recommended"
 
-    else:
-        return "Favorable conditions. Proceed with standard execution strategy."
+    return "Proceed normally"

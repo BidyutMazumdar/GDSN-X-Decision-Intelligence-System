@@ -24,8 +24,9 @@ try:
         decision_confidence,
         explain_score
     )
+    from system.report_engine import generate_pdf
 except Exception as e:
-    st.error(f"❌ Engine import failed: {e}")
+    st.error(f"❌ System import failed: {e}")
     st.stop()
 
 # ================= CONFIG =================
@@ -37,8 +38,6 @@ st.set_page_config(
 # ================= HEADER =================
 st.title("🧠 GDSN-X™ Decision Intelligence Platform")
 st.caption("v2.3 ELITE • Multi-Factor • Explainable • Consulting-Grade Engine")
-
-# ================= TRUST =================
 st.caption("⚠️ Deterministic model. Not financial advice.")
 
 # ================= SIDEBAR =================
@@ -62,6 +61,8 @@ scenario_type = st.sidebar.selectbox(
     ["Base Case", "Best Case", "Worst Case"]
 )
 
+st.caption(f"Use Case: {use_case} | Strategy: {strategy_mode}")
+
 # ================= DATA =================
 DATA_PATH = os.path.join(ROOT_DIR, "data", "country_risk.csv")
 
@@ -69,11 +70,16 @@ if not os.path.exists(DATA_PATH):
     st.error("❌ Dataset not found")
     st.stop()
 
-df = pd.read_csv(DATA_PATH)
+@st.cache_data
+def load_data(path):
+    return pd.read_csv(path)
+
+df = load_data(DATA_PATH)
 
 country = st.selectbox("🌍 Select Country", sorted(df["country"].dropna().unique()))
 row = df[df["country"] == country].iloc[0]
 
+# ================= SAFE INPUT =================
 def safe(x):
     try:
         return max(0, min(float(x), 100))
@@ -122,14 +128,13 @@ categories = ["Economic", "Political", "Social", "Tech", "Env", "Legal"]
 values = [economic, political, social, tech, env, legal]
 
 fig = go.Figure()
-
 fig.add_trace(go.Scatterpolar(
     r=values + [values[0]],
     theta=categories + [categories[0]],
     fill='toself'
 ))
-
 fig.update_layout(polar=dict(radialaxis=dict(range=[0, 100])))
+
 st.plotly_chart(fig, use_container_width=True)
 
 # ================= ALERT =================
@@ -140,10 +145,9 @@ if any(v > 80 for v in values):
 forecast = round(sum(values) / len(values), 2)
 st.info(f"📈 Estimated Trend Risk: {forecast}")
 
-# ================= RUN =================
+# ================= RUN ANALYSIS =================
 if st.button("🚀 Run Full Analysis", use_container_width=True):
 
-    # ✅ FIXED (IMPORTANT)
     score, level, meta = risk_score(
         economic, political, social,
         tech, env, legal,
@@ -161,6 +165,25 @@ if st.button("🚀 Run Full Analysis", use_container_width=True):
     confidence = data_confidence(economic, political, social, tech, env, legal)
     decision_conf = decision_confidence(score)
 
+    # ✅ CLEAN FIX (READABILITY IMPROVEMENT)
+    analysis = smart_insight(
+        score, level,
+        economic, political, social, tech, env, legal
+    )
+
+    # Save for PDF
+    st.session_state["result"] = {
+        "score": score,
+        "level": level,
+        "explanation": explanation,
+        "analysis": analysis,
+        "profile": profile,
+        "recommendation": recommendation,
+        "confidence": confidence,
+        "decision_conf": decision_conf,
+        "volatility": volatility
+    }
+
     st.divider()
 
     # ================= METRICS =================
@@ -171,10 +194,9 @@ if st.button("🚀 Run Full Analysis", use_container_width=True):
 
     # ================= INSIGHTS =================
     st.subheader("📌 Key Insights")
-
-    st.info(explanation)  # 🔥 CONSULTING LEVEL
+    st.info(explanation)
     st.info(insight)
-    st.info(smart_insight(score, level, economic, political, social, tech, env, legal))
+    st.info(analysis)
 
     # ================= CONFIDENCE =================
     st.info(f"📊 Data Confidence: {confidence['label']} ({confidence['score']}%)")
@@ -191,7 +213,7 @@ if st.button("🚀 Run Full Analysis", use_container_width=True):
 
     st.success(recommendation)
 
-    # ================= REPORT =================
+    # ================= TXT REPORT =================
     report = f"""
 ===== GDSN-X™ ELITE REPORT =====
 
@@ -208,7 +230,7 @@ Decision Confidence: {decision_conf}%
 {explanation}
 
 --- ANALYSIS ---
-{smart_insight(score, level, economic, political, social, tech, env, legal)}
+{analysis}
 
 --- PROFILE ---
 {profile}
@@ -226,9 +248,39 @@ Decision Confidence: {decision_conf}%
 """
 
     st.download_button(
-        "📥 Download Report",
+        "📥 Download TXT Report",
         report.encode("utf-8"),
         file_name="GDSN_X_ELITE_Report.txt"
     )
 
-    st.code(report)
+# ================= PDF REPORT =================
+if "result" in st.session_state:
+
+    if st.button("📄 Generate PDF Report"):
+
+        r = st.session_state["result"]
+        pdf_file = "GDSN_X_Report.pdf"
+
+        generate_pdf(
+            pdf_file,
+            client_name,
+            project_name,
+            country,
+            r["score"],
+            r["level"],
+            r["decision_conf"],
+            r["explanation"],
+            r["analysis"],  # ✅ CLEAN FIX USED HERE
+            r["profile"],
+            r["volatility"],
+            r["confidence"]["label"],
+            r["confidence"]["score"],
+            r["recommendation"]
+        )
+
+        with open(pdf_file, "rb") as f:
+            st.download_button(
+                "📥 Download PDF",
+                f,
+                file_name=pdf_file
+            )

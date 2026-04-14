@@ -1,42 +1,44 @@
 """
 GDSN-X™ Decision Intelligence System
-Core Risk Scoring Engine — v1 (Enhanced)
+Core Risk Engine — v2 PRO (Production Grade)
 
 Author: Bidyut Mazumdar
 
-Description:
-Advanced weighted risk scoring engine with multi-factor insight,
-dynamic recommendation logic, and risk profiling.
-
-Model:
-- Economic Risk (40%)
-- Political Risk (35%)
-- Social Risk (25%)
-
-Outputs:
-- Risk Score (0–100)
-- Risk Level Classification
-- Primary & Secondary Risk Insight
-- Risk Profile Tag
-- Strategic Recommendation
+Upgrades:
+✔ Advanced scoring
+✔ Volatility index
+✔ Confidence modeling
+✔ Smart insights (AI-style)
+✔ Data robustness
+✔ Full compatibility with dashboard
 """
 
 from typing import Tuple
+import statistics
 
 
 # =========================
-# 🔹 VALIDATION
+# 🔹 SAFE VALIDATION
 # =========================
 def validate_inputs(economic: float, political: float, social: float) -> None:
     for value in (economic, political, social):
         if not (0 <= value <= 100):
-            raise ValueError("All inputs must be between 0 and 100.")
+            raise ValueError("Inputs must be between 0–100.")
+
+
+def safe(value):
+    try:
+        return float(value)
+    except Exception:
+        return 0.0
 
 
 # =========================
 # 🔹 CORE SCORE
 # =========================
 def risk_score(economic: float, political: float, social: float) -> Tuple[float, str]:
+    economic, political, social = safe(economic), safe(political), safe(social)
+
     validate_inputs(economic, political, social)
 
     score = (0.4 * economic) + (0.35 * political) + (0.25 * social)
@@ -52,7 +54,7 @@ def risk_score(economic: float, political: float, social: float) -> Tuple[float,
 
 
 # =========================
-# 🔹 MULTI-FACTOR INSIGHT
+# 🔹 INSIGHT ENGINE
 # =========================
 def risk_insight(economic: float, political: float, social: float) -> str:
     risks = {
@@ -76,69 +78,91 @@ def risk_insight(economic: float, political: float, social: float) -> str:
 # 🔹 RISK PROFILE
 # =========================
 def risk_profile(economic: float, political: float, social: float) -> str:
-    if political > 70:
-        return "High Political Exposure"
-    elif economic > 70:
-        return "Economic Dominant Risk"
-    elif social > 70:
-        return "Social Instability Risk"
+    if political > 75:
+        return "Geopolitical Fragility"
+    elif economic > 75:
+        return "Macroeconomic Instability"
+    elif social > 75:
+        return "Societal Disruption Risk"
     else:
-        return "Balanced Risk Profile"
+        return "Balanced Risk Structure"
 
 
 # =========================
-# 🔹 DYNAMIC RECOMMENDATION
+# 🔹 VOLATILITY INDEX
+# =========================
+def risk_volatility(economic: float, political: float, social: float) -> float:
+    values = [economic, political, social]
+    return round(statistics.pstdev(values), 2)
+
+
+# =========================
+# 🔹 DATA CONFIDENCE
+# =========================
+def data_confidence(economic: float, political: float, social: float) -> str:
+    values = [economic, political, social]
+
+    if any(v == 0 for v in values):
+        return "Low (Incomplete Data)"
+    elif max(values) - min(values) > 50:
+        return "Medium (High Variance)"
+    else:
+        return "High (Consistent Data)"
+
+
+# =========================
+# 🔹 DECISION CONFIDENCE
+# =========================
+def decision_confidence(score: float) -> str:
+    if score > 75:
+        return "Low Confidence (High Risk Environment)"
+    elif score > 50:
+        return "Moderate Confidence"
+    else:
+        return "High Confidence"
+
+
+# =========================
+# 🔹 SMART AI INSIGHT
+# =========================
+def smart_insight(score, level, economic, political, social) -> str:
+
+    if level == "High Risk":
+        return (
+            "Systemic instability detected. Multi-factor risk alignment suggests "
+            "high exposure. Strategic delay or defensive positioning recommended."
+        )
+
+    elif level == "Medium Risk":
+        return (
+            "Moderate volatility environment. Selective optimization and phased "
+            "execution strategy advised to mitigate downside exposure."
+        )
+
+    else:
+        return (
+            "Stable environment. Risk factors are controlled. Opportunity for "
+            "structured growth and capital deployment."
+        )
+
+
+# =========================
+# 🔹 RECOMMENDATION ENGINE
 # =========================
 def risk_recommendation(level: str, economic: float, political: float, social: float) -> str:
 
     if level == "High Risk":
         if political > 70:
-            return "High political instability detected. Delay or avoid entry."
+            return "Severe political instability. Avoid entry or delay decision."
         elif economic > 70:
-            return "High economic volatility. Reduce investment exposure."
+            return "Economic volatility high. Reduce exposure and hedge risk."
         elif social > 70:
-            return "High social instability. Monitor public sentiment closely."
+            return "Social unrest risk. Monitor behavioral indicators."
         else:
-            return "Overall high risk. Reassess full strategy."
+            return "Overall high risk. Re-evaluate full strategy."
 
     elif level == "Medium Risk":
-        if political > economic and political > social:
-            return "Political risk dominant. Use phased or limited entry strategy."
-        elif economic > political and economic > social:
-            return "Economic risk dominant. Optimize cost and investment scale."
-        else:
-            return "Moderate uncertainty. Proceed with controlled execution."
+        return "Controlled execution recommended. Use phased investment strategy."
 
     else:
-        return "Low risk environment. Proceed under standard conditions."
-
-
-# =========================
-# 🔹 CLI TEST
-# =========================
-def main() -> None:
-    print("=== GDSN-X™ Decision Intelligence Engine v1 ===")
-
-    try:
-        economic = float(input("Enter Economic Risk (0-100): "))
-        political = float(input("Enter Political Risk (0-100): "))
-        social = float(input("Enter Social Risk (0-100): "))
-
-        score, level = risk_score(economic, political, social)
-        insight = risk_insight(economic, political, social)
-        profile = risk_profile(economic, political, social)
-        recommendation = risk_recommendation(level, economic, political, social)
-
-        print("\n=== Result ===")
-        print(f"Risk Score: {score}")
-        print(f"Risk Level: {level}")
-        print(insight)
-        print(f"Risk Profile: {profile}")
-        print(f"Recommendation: {recommendation}")
-
-    except ValueError as e:
-        print("Error:", e)
-
-
-if __name__ == "__main__":
-    main()
+        return "Favorable conditions. Proceed with standard execution strategy."

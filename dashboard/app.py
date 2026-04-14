@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 import datetime
-import sys, os
+import sys
+import os
 
-# ================= PATH =================
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# ================= PATH FIX (CLOUD SAFE) =================
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
 
 from system.decision_engine import (
     risk_score,
@@ -42,7 +44,7 @@ scenario_type = st.sidebar.selectbox(
 
 pro_mode = st.sidebar.checkbox("🔒 Enable Pro Mode")
 
-# Pricing
+# ================= PRICING =================
 st.sidebar.markdown("## 💰 Pricing")
 st.sidebar.info("""
 Free → Demo Analysis  
@@ -50,34 +52,43 @@ Free → Demo Analysis
 ₹5000 → Premium Consulting  
 """)
 
-# ================= DATA =================
+# ================= DATA LOAD =================
 try:
     df_country = pd.read_csv("data/country_risk.csv")
 except Exception:
     st.error("❌ country_risk.csv not found in /data folder")
     st.stop()
 
-# ✅ CSV VALIDATION
+# ================= CSV VALIDATION =================
 required_cols = {"country", "economic", "political", "social"}
 if not required_cols.issubset(df_country.columns):
     st.error("❌ Invalid CSV format. Required columns missing.")
     st.stop()
 
-# Country Selection
-country = st.selectbox("🌍 Select Country", df_country["country"])
+# ================= COUNTRY SELECT =================
+country = st.selectbox(
+    "🌍 Select Country",
+    sorted(df_country["country"].dropna().unique())
+)
 
 filtered = df_country[df_country["country"] == country]
 
-# ✅ EMPTY SAFETY
 if filtered.empty:
     st.error("❌ Country data not found")
     st.stop()
 
 row = filtered.iloc[0]
 
-economic = int(row["economic"])
-political = int(row["political"])
-social = int(row["social"])
+# ================= SAFE INT (FINAL FIX) =================
+def safe_int(value):
+    try:
+        return int(value)
+    except:
+        return 0
+
+economic = safe_int(row["economic"])
+political = safe_int(row["political"])
+social = safe_int(row["social"])
 
 # ================= SCENARIO IMPACT =================
 if scenario_type == "High Risk Zone":
@@ -99,7 +110,7 @@ st.bar_chart({
     "Social": social
 })
 
-# ================= VALIDATION =================
+# ================= INPUT VALIDATION =================
 if not client_name or not project_name:
     st.warning("⚠️ Client Name and Project Name are required")
     st.stop()
@@ -130,12 +141,11 @@ if st.button("🚀 Run Analysis", use_container_width=True):
     st.markdown("## 📈 Analysis Summary")
 
     col1, col2, col3 = st.columns(3)
-
     col1.metric("Risk Score", score)
     col2.metric("Risk Level", level)
     col3.metric("Volatility Index", volatility)
 
-    # Risk Tag
+    # ================= RISK TAG =================
     if score > 70:
         st.error("🔴 CRITICAL RISK")
     elif score > 50:
@@ -143,15 +153,15 @@ if st.button("🚀 Run Analysis", use_container_width=True):
     else:
         st.success("🟢 STABLE")
 
-    # Insights
+    # ================= INSIGHTS =================
     st.info(insight)
     st.info(smart_insight(score, level, economic, political, social))
 
-    # Confidence
+    # ================= CONFIDENCE =================
     st.info(f"📌 Data Confidence: {confidence}")
     st.info(f"📊 Decision Confidence: {decision_conf}")
 
-    # Recommendation
+    # ================= RECOMMENDATION =================
     st.success(recommendation)
 
     # ================= REPORT =================
@@ -194,7 +204,7 @@ This scenario represents a {level} environment with {decision_conf}.
 ===== END REPORT =====
 """
 
-    # ✅ ENCODING FIX
+    # ================= DOWNLOAD =================
     st.download_button(
         label="📥 Download Report",
         data=report.encode("utf-8"),

@@ -1,6 +1,6 @@
 # =========================
-# 🔐 PASSWORD SECURITY (LOCK 🔒 EDITION)
-# GDSN-X™ Enterprise Standard
+# 🔐 PASSWORD SECURITY (ULTIMATE LOCK 🔒)
+# GDSN-X™ Enterprise Security Layer
 # =========================
 
 from passlib.context import CryptContext
@@ -12,7 +12,7 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
-    bcrypt__rounds=12   # 🔐 security cost factor (12 = strong default)
+    bcrypt__rounds=12   # 🔐 strong security (recommended default)
 )
 
 
@@ -23,7 +23,8 @@ def hash_password(password: str) -> str:
     """
     Convert plain password → secure hash
     """
-    if not password:
+
+    if not password or not password.strip():
         raise ValueError("Password cannot be empty")
 
     return pwd_context.hash(password)
@@ -47,14 +48,19 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 # =========================
-# 🔐 OPTIONAL: PASSWORD VALIDATION (ELITE)
+# 🔐 PASSWORD POLICY (ELITE)
 # =========================
 def validate_password_strength(password: str) -> bool:
     """
     Enforce strong password policy
+    Rules:
+    - min 8 characters
+    - at least 1 uppercase
+    - at least 1 lowercase
+    - at least 1 digit
     """
 
-    if len(password) < 8:
+    if not password or len(password) < 8:
         return False
 
     has_upper = any(c.isupper() for c in password)

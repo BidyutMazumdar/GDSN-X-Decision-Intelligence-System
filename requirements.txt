@@ -5,6 +5,7 @@ fastapi
 uvicorn
 pydantic
 python-jose
+python-dotenv
+passlib[bcrypt]
 numpy
 scipy
-reportlab

@@ -1,5 +1,5 @@
 # =========================
-# 🔐 AUTH DEPENDENCIES (LOCK 🔒 EDITION)
+# 🔐 AUTH DEPENDENCIES (FINAL LOCK 🔒)
 # GDSN-X™ Enterprise Security Layer
 # =========================
 
@@ -24,11 +24,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     Extract and validate user from JWT token
     """
 
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired authentication token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
     if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing authentication token"
-        )
+        raise credentials_exception
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -36,26 +39,21 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
         username: str = payload.get("sub")
 
         if username is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload"
-            )
+            raise credentials_exception
 
         return username
 
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token is invalid or expired"
-        )
+        raise credentials_exception
 
 
 # =========================
-# 🔐 OPTIONAL: ROLE CHECK (FUTURE READY)
+# 🔐 OPTIONAL: ROLE-BASED ACCESS (FUTURE READY)
 # =========================
 def require_admin(user: str = Depends(get_current_user)) -> str:
     """
-    Example role-based access (extend later)
+    Example admin-only access control
+    (Extend later with DB roles)
     """
 
     if user != "admin":

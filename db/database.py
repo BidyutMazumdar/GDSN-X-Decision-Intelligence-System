@@ -1,5 +1,5 @@
 # =========================
-# 🧑‍💼 DATABASE CONNECTION (LOCK 🔒 EDITION)
+# 🧑‍💼 DATABASE CONNECTION (ULTIMATE LOCK 🔒)
 # GDSN-X™ Enterprise DB Layer
 # =========================
 
@@ -19,14 +19,14 @@ if not DATABASE_URL:
 
 
 # =========================
-# 🧠 ENGINE (OPTIMIZED)
+# 🧠 ENGINE (OPTIMIZED FOR POSTGRESQL)
 # =========================
 engine = create_engine(
     DATABASE_URL,
-    pool_size=10,          # connection pool
-    max_overflow=20,       # extra connections
+    pool_size=10,          # default connections
+    max_overflow=20,       # extra burst connections
     pool_pre_ping=True,    # avoid stale connections
-    echo=False             # set True for debug
+    echo=False             # set True only for debugging
 )
 
 
@@ -51,7 +51,7 @@ Base = declarative_base()
 # =========================
 def get_db():
     """
-    FastAPI dependency for DB session
+    FastAPI dependency for DB session (safe + rollback support)
     """
 
     db = SessionLocal()

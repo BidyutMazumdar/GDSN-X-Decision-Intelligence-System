@@ -1,12 +1,11 @@
 # =========================
-# 🧠 GDSN-X™ DASHBOARD (SaaS FINAL)
+# 🧠 GDSN-X™ DASHBOARD (ULTIMATE SaaS)
 # =========================
 
 import streamlit as st
 import pandas as pd
 import requests
 import plotly.graph_objects as go
-import plotly.express as px
 import os
 
 # =========================
@@ -15,30 +14,38 @@ import os
 st.set_page_config(page_title="GDSN-X™ SaaS", layout="wide")
 
 API_BASE = "http://localhost:8000/api/v2"
+TIMEOUT = 10
 
 # =========================
 # 🔐 LOGIN SYSTEM
 # =========================
-if "token" not in st.session_state:
-
+def login():
     st.sidebar.title("🔐 Login")
 
     username = st.sidebar.text_input("Username")
     password = st.sidebar.text_input("Password", type="password")
 
     if st.sidebar.button("Login"):
-        res = requests.post(
-            f"{API_BASE}/login",
-            json={"username": username, "password": password}
-        )
+        try:
+            res = requests.post(
+                f"{API_BASE}/login",
+                json={"username": username, "password": password},
+                timeout=TIMEOUT
+            )
 
-        if res.status_code == 200:
-            st.session_state["token"] = res.json()["access_token"]
-            st.success("✅ Login successful")
-            st.rerun()
-        else:
-            st.error("❌ Invalid credentials")
+            if res.status_code == 200:
+                st.session_state["token"] = res.json()["access_token"]
+                st.success("✅ Login successful")
+                st.rerun()
+            else:
+                st.error("❌ Invalid credentials")
 
+        except requests.exceptions.RequestException:
+            st.error("❌ Server not reachable")
+
+# Stop if not logged in
+if "token" not in st.session_state:
+    login()
     st.stop()
 
 # =========================
@@ -52,7 +59,7 @@ if st.sidebar.button("Logout"):
 # 🧾 HEADER
 # =========================
 st.title("🧠 GDSN-X™ Decision Intelligence Platform")
-st.caption("SaaS Edition • API Powered • Multi-User Ready")
+st.caption("Ultimate SaaS Edition • API Powered • Secure • Scalable")
 
 # =========================
 # 🧾 CONFIGURATION
@@ -78,7 +85,7 @@ scenario_type = st.sidebar.selectbox(
 )
 
 # =========================
-# 📊 DATA LOAD
+# 📊 LOAD DATA
 # =========================
 DATA_PATH = os.path.join("data", "country_risk.csv")
 
@@ -121,7 +128,7 @@ with col3:
     legal = st.slider("Legal Risk", 0, 100, 50)
 
 # =========================
-# 🔁 SCENARIO LOGIC
+# 🔁 SCENARIO
 # =========================
 def apply_scenario(values):
     if scenario_type == "Best Case":
@@ -155,7 +162,6 @@ fig.add_trace(go.Scatterpolar(
 ))
 
 fig.update_layout(polar=dict(radialaxis=dict(range=[0, 100])))
-
 st.plotly_chart(fig, use_container_width=True)
 
 # =========================
@@ -178,17 +184,27 @@ if st.button("🚀 Run Analysis", use_container_width=True):
         "strategy_mode": strategy_mode
     }
 
-    res = requests.post(
-        f"{API_BASE}/risk",
-        json=payload,
-        headers=headers
-    )
+    try:
+        res = requests.post(
+            f"{API_BASE}/risk",
+            json=payload,
+            headers=headers,
+            timeout=TIMEOUT
+        )
 
-    if res.status_code != 200:
-        st.error("❌ API Error")
+        if res.status_code != 200:
+            st.error(f"❌ API Error: {res.text}")
+            st.stop()
+
+        data = res.json()
+
+    except requests.exceptions.Timeout:
+        st.error("❌ Request timeout")
         st.stop()
 
-    data = res.json()
+    except requests.exceptions.RequestException:
+        st.error("❌ API connection failed")
+        st.stop()
 
     st.divider()
 
@@ -199,7 +215,7 @@ if st.button("🚀 Run Analysis", use_container_width=True):
 
     colA.metric("Risk Score", data["score"])
     colB.metric("Risk Level", data["level"])
-    colC.metric("Confidence", data["decision_conf"])
+    colC.metric("Decision Confidence", data["decision_conf"])
 
     # =========================
     # 📌 INSIGHTS
@@ -211,7 +227,32 @@ if st.button("🚀 Run Analysis", use_container_width=True):
     st.success(data["recommendation"])
 
 # =========================
-# 📊 HISTORY (PLACEHOLDER)
+# 📊 USER HISTORY (API READY)
 # =========================
 st.sidebar.markdown("### 📊 User History")
-st.sidebar.info("Coming soon (DB integration)")
+
+if st.sidebar.button("Load History"):
+
+    headers = {
+        "Authorization": f"Bearer {st.session_state['token']}"
+    }
+
+    try:
+        res = requests.get(
+            f"{API_BASE}/history",
+            headers=headers,
+            timeout=TIMEOUT
+        )
+
+        if res.status_code == 200:
+            history = res.json()
+
+            for item in history:
+                st.sidebar.write(
+                    f"{item['project']} → {item['score']} ({item['level']})"
+                )
+        else:
+            st.sidebar.warning("No history found")
+
+    except:
+        st.sidebar.error("Failed to load history")

@@ -1,11 +1,57 @@
+# =========================
+# 🚀 GDSN-X™ FINAL REQUIREMENTS
+# Production-Ready Setup
+# =========================
+
+
+# =========================
+# 🖥️ FRONTEND (DASHBOARD)
+# =========================
 streamlit
-pandas
 plotly
+
+
+# =========================
+# 📊 DATA PROCESSING
+# =========================
+pandas
+numpy
+scipy
+
+
+# =========================
+# ⚡ BACKEND API
+# =========================
 fastapi
 uvicorn
 pydantic
+
+
+# =========================
+# 🔐 AUTH & SECURITY
+# =========================
 python-jose
-python-dotenv
 passlib[bcrypt]
-numpy
-scipy
+python-dotenv
+
+
+# =========================
+# 🧑‍💼 DATABASE (POSTGRESQL)
+# =========================
+sqlalchemy
+psycopg2-binary
+
+
+# =========================
+# 📄 REPORT GENERATION
+# =========================
+reportlab
+
+
+# =========================
+# 🧪 OPTIONAL (SCALING / PRODUCTION)
+# =========================
+alembic              # DB migrations
+gunicorn             # production server (Linux)
+httpx                # async API calls
+python-multipart     # file upload support

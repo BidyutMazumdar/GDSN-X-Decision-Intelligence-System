@@ -13,7 +13,8 @@ import os
 # =========================
 st.set_page_config(page_title="GDSN-X™ SaaS", layout="wide")
 
-API_BASE = "http://localhost:8000/api/v3"
+# 🔥 PRODUCTION SAFE (ENV SUPPORT)
+API_BASE = os.getenv("API_BASE", "http://localhost:8000/api/v3")
 TIMEOUT = 15
 
 # =========================
@@ -48,11 +49,13 @@ if "token" not in st.session_state:
     st.stop()
 
 # =========================
-# 🔓 LOGOUT
+# 🔓 LOGOUT (SAFE)
 # =========================
-if st.sidebar.button("Logout"):
-    del st.session_state["token"]
-    st.rerun()
+if "token" in st.session_state:
+    if st.sidebar.button("Logout"):
+        del st.session_state["token"]
+        st.session_state.pop("result", None)  # clear old result
+        st.rerun()
 
 # =========================
 # 🧾 HEADER
@@ -196,7 +199,7 @@ if st.button("🚀 Run Analysis", use_container_width=True):
             st.error(f"❌ API Error: {res.text}")
             st.stop()
 
-        st.session_state["result"] = res.json()   # ✅ FINAL FIX
+        st.session_state["result"] = res.json()
 
     except requests.exceptions.Timeout:
         st.error("❌ Request timeout")
@@ -207,7 +210,7 @@ if st.button("🚀 Run Analysis", use_container_width=True):
         st.stop()
 
 # =========================
-# 📊 PERSISTENT RESULT (FINAL LOCK)
+# 📊 PERSISTENT RESULT
 # =========================
 if "result" in st.session_state:
 

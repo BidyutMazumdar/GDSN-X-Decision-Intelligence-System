@@ -1,5 +1,5 @@
 # =========================
-# 🏢 GDSN-X™ ENTERPRISE API (FINAL v3)
+# 🏢 GDSN-X™ ENTERPRISE API (FINAL LOCK 🔐)
 # =========================
 
 from fastapi import FastAPI, HTTPException, Depends
@@ -28,26 +28,25 @@ from system.simulation import run_simulation
 # DB LAYER
 # =========================
 from db.database import get_db
-from db import models
+from db import models, crud
 
 # =========================
 # AUTH LAYER
 # =========================
 from auth.dependencies import get_current_user
-
+from auth.auth import create_access_token
 
 # =========================
 # APP INIT
 # =========================
 app = FastAPI(
     title="GDSN-X™ Enterprise Decision API",
-    version="3.0 ENTERPRISE",
-    description="Multi-user SaaS AI Decision Intelligence Engine"
+    version="3.0 FINAL",
+    description="Secure Multi-user SaaS Decision Intelligence Engine"
 )
 
-
 # =========================
-# REQUEST MODEL
+# REQUEST MODELS
 # =========================
 class RiskInput(BaseModel):
     economic: float = Field(..., ge=0, le=100)
@@ -64,21 +63,82 @@ class RiskInput(BaseModel):
     iterations: int = Field(default=1000, ge=100, le=10000)
 
 
+class LoginInput(BaseModel):
+    username: str
+    password: str
+
+
+class RegisterInput(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
 # =========================
 # HEALTH CHECK
 # =========================
-@app.get("/")
+@app.get("/", tags=["System"])
 def root():
     return {
-        "status": "GDSN-X Enterprise API Running 🚀",
-        "version": "3.0 ENTERPRISE"
+        "status": "GDSN-X API Running 🚀",
+        "version": "3.0 FINAL"
     }
 
 
 # =========================
-# 🚀 RISK ENGINE (CORE)
+# 🔐 REGISTER API
 # =========================
-@app.post("/api/v3/risk")
+@app.post("/register", tags=["Auth"])
+def register(data: RegisterInput, db: Session = Depends(get_db)):
+
+    user = crud.create_user(
+        db,
+        data.username,
+        data.email,
+        data.password
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="User already exists"
+        )
+
+    return {
+        "message": "User created successfully"
+    }
+
+
+# =========================
+# 🔐 LOGIN API
+# =========================
+@app.post("/login", tags=["Auth"])
+def login(data: LoginInput, db: Session = Depends(get_db)):
+
+    user = crud.verify_user(db, data.username, data.password)
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+
+    # 🔐 FINAL TOKEN (SECURE)
+    token = create_access_token({
+        "sub": user.username,
+        "user_id": user.id
+    })
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
+
+
+# =========================
+# 🚀 RISK ENGINE (PROTECTED)
+# =========================
+@app.post("/api/v3/risk", tags=["Core"])
 def calculate_risk(
     data: RiskInput,
     db: Session = Depends(get_db),
@@ -86,7 +146,7 @@ def calculate_risk(
 ) -> Dict:
 
     try:
-        # ================= CORE ENGINE =================
+        # CORE ENGINE
         score, level, meta = risk_score(
             data.economic,
             data.political,
@@ -98,7 +158,6 @@ def calculate_risk(
             data.strategy_mode
         )
 
-        # ================= EXPLAINABILITY =================
         explanation = explain_score(meta)
 
         insight = risk_insight(
@@ -121,7 +180,6 @@ def calculate_risk(
             data.legal
         )
 
-        # ================= STRUCTURE =================
         profile = risk_profile(
             data.economic,
             data.political,
@@ -140,7 +198,6 @@ def calculate_risk(
             data.legal
         )
 
-        # ================= CONFIDENCE =================
         confidence = data_confidence(
             data.economic,
             data.political,
@@ -152,10 +209,8 @@ def calculate_risk(
 
         decision_conf = decision_confidence(score)
 
-        # ================= RECOMMENDATION =================
         recommendation = risk_recommendation(level, data.strategy_mode)
 
-        # ================= SIMULATION =================
         simulation = run_simulation(
             data.economic,
             data.political,
@@ -168,7 +223,7 @@ def calculate_risk(
             iterations=data.iterations
         )
 
-        # ================= DB SAVE =================
+        # SAVE TO DB
         record = models.Analysis(
             user_id=user.id,
             country=data.country,
@@ -186,7 +241,6 @@ def calculate_risk(
         db.commit()
         db.refresh(record)
 
-        # ================= RESPONSE =================
         return {
             "core": {
                 "score": score,
@@ -222,18 +276,21 @@ def calculate_risk(
 
 
 # =========================
-# 📊 HISTORY (SAAS CORE)
+# 📊 USER HISTORY (PROTECTED)
 # =========================
-@app.get("/api/v3/history")
+@app.get("/api/v3/history", tags=["User"])
 def get_history(
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
 
-    records = db.query(models.Analysis)\
-        .filter(models.Analysis.user_id == user.id)\
-        .order_by(models.Analysis.created_at.desc())\
+    # ✅ FIXED CLEAN QUERY
+    records = (
+        db.query(models.Analysis)
+        .filter(models.Analysis.user_id == user.id)
+        .order_by(models.Analysis.created_at.desc())
         .all()
+    )
 
     return [
         {

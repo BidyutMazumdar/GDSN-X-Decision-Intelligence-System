@@ -1,5 +1,5 @@
 # =========================
-# 🧠 GDSN-X™ DASHBOARD (ENTERPRISE v3 - LOCKED)
+# 🧠 GDSN-X™ DASHBOARD (ENTERPRISE v3 - ABSOLUTE FINAL LOCK)
 # =========================
 
 import streamlit as st
@@ -17,15 +17,17 @@ API_BASE = "http://localhost:8000/api/v3"
 TIMEOUT = 15
 
 # =========================
-# 🔐 LOGIN SYSTEM
+# 🔐 MAIN LOGIN SCREEN
 # =========================
-def login():
-    st.sidebar.title("🔐 Login")
+if "token" not in st.session_state:
 
-    username = st.sidebar.text_input("Username")
-    password = st.sidebar.text_input("Password", type="password")
+    st.title("🔐 GDSN-X Login")
+    st.markdown("Enter your credentials to access the platform")
 
-    if st.sidebar.button("Login"):
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
         try:
             res = requests.post(
                 f"{API_BASE.replace('/api/v3','')}/login",
@@ -43,8 +45,6 @@ def login():
         except:
             st.error("❌ Server not reachable")
 
-if "token" not in st.session_state:
-    login()
     st.stop()
 
 # =========================
@@ -196,7 +196,7 @@ if st.button("🚀 Run Analysis", use_container_width=True):
             st.error(f"❌ API Error: {res.text}")
             st.stop()
 
-        data = res.json()
+        st.session_state["result"] = res.json()   # ✅ FINAL FIX
 
     except requests.exceptions.Timeout:
         st.error("❌ Request timeout")
@@ -206,20 +206,21 @@ if st.button("🚀 Run Analysis", use_container_width=True):
         st.error("❌ API connection failed")
         st.stop()
 
+# =========================
+# 📊 PERSISTENT RESULT (FINAL LOCK)
+# =========================
+if "result" in st.session_state:
+
+    data = st.session_state["result"]
+
     st.divider()
 
-    # =========================
-    # 📊 METRICS
-    # =========================
     colA, colB, colC = st.columns(3)
 
     colA.metric("Risk Score", data["core"]["score"])
     colB.metric("Risk Level", data["core"]["level"])
     colC.metric("Decision Confidence", data["core"]["decision_conf"])
 
-    # =========================
-    # 📌 INSIGHTS
-    # =========================
     st.subheader("📌 Insights")
 
     st.info(data["explainability"]["explanation"])

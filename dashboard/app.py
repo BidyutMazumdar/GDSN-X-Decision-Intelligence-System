@@ -1,5 +1,5 @@
 # =========================
-# 🧠 GDSN-X™ DASHBOARD (ULTIMATE SaaS)
+# 🧠 GDSN-X™ DASHBOARD (ENTERPRISE v3 - LOCKED)
 # =========================
 
 import streamlit as st
@@ -13,8 +13,8 @@ import os
 # =========================
 st.set_page_config(page_title="GDSN-X™ SaaS", layout="wide")
 
-API_BASE = "http://localhost:8000/api/v2"
-TIMEOUT = 10
+API_BASE = "http://localhost:8000/api/v3"
+TIMEOUT = 15
 
 # =========================
 # 🔐 LOGIN SYSTEM
@@ -28,7 +28,7 @@ def login():
     if st.sidebar.button("Login"):
         try:
             res = requests.post(
-                f"{API_BASE}/login",
+                f"{API_BASE.replace('/api/v3','')}/login",
                 json={"username": username, "password": password},
                 timeout=TIMEOUT
             )
@@ -40,10 +40,9 @@ def login():
             else:
                 st.error("❌ Invalid credentials")
 
-        except requests.exceptions.RequestException:
+        except:
             st.error("❌ Server not reachable")
 
-# Stop if not logged in
 if "token" not in st.session_state:
     login()
     st.stop()
@@ -59,7 +58,7 @@ if st.sidebar.button("Logout"):
 # 🧾 HEADER
 # =========================
 st.title("🧠 GDSN-X™ Decision Intelligence Platform")
-st.caption("Ultimate SaaS Edition • API Powered • Secure • Scalable")
+st.caption("Enterprise SaaS • API v3 • Secure • Scalable")
 
 # =========================
 # 🧾 CONFIGURATION
@@ -165,7 +164,7 @@ fig.update_layout(polar=dict(radialaxis=dict(range=[0, 100])))
 st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# 🚀 RUN ANALYSIS (API)
+# 🚀 RUN ANALYSIS
 # =========================
 if st.button("🚀 Run Analysis", use_container_width=True):
 
@@ -181,7 +180,8 @@ if st.button("🚀 Run Analysis", use_container_width=True):
         "env": env,
         "legal": legal,
         "use_case": use_case,
-        "strategy_mode": strategy_mode
+        "strategy_mode": strategy_mode,
+        "country": country
     }
 
     try:
@@ -213,21 +213,21 @@ if st.button("🚀 Run Analysis", use_container_width=True):
     # =========================
     colA, colB, colC = st.columns(3)
 
-    colA.metric("Risk Score", data["score"])
-    colB.metric("Risk Level", data["level"])
-    colC.metric("Decision Confidence", data["decision_conf"])
+    colA.metric("Risk Score", data["core"]["score"])
+    colB.metric("Risk Level", data["core"]["level"])
+    colC.metric("Decision Confidence", data["core"]["decision_conf"])
 
     # =========================
     # 📌 INSIGHTS
     # =========================
     st.subheader("📌 Insights")
 
-    st.info(data["explanation"])
-    st.info(data["analysis"])
+    st.info(data["explainability"]["explanation"])
+    st.info(data["explainability"]["analysis"])
     st.success(data["recommendation"])
 
 # =========================
-# 📊 USER HISTORY (API READY)
+# 📊 HISTORY
 # =========================
 st.sidebar.markdown("### 📊 User History")
 
@@ -249,7 +249,7 @@ if st.sidebar.button("Load History"):
 
             for item in history:
                 st.sidebar.write(
-                    f"{item['project']} → {item['score']} ({item['level']})"
+                    f"{item['country']} → {item['score']} ({item['level']})"
                 )
         else:
             st.sidebar.warning("No history found")

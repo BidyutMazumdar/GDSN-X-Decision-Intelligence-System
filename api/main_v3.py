@@ -1,5 +1,5 @@
 # =========================
-# 🏢 GDSN-X™ ENTERPRISE API (FINAL LOCK 🔐)
+# 🏢 GDSN-X™ ENTERPRISE API (FINAL v3 - ABSOLUTE LOCK 🔐)
 # =========================
 
 from fastapi import FastAPI, HTTPException, Depends
@@ -41,8 +41,8 @@ from auth.auth import create_access_token
 # =========================
 app = FastAPI(
     title="GDSN-X™ Enterprise Decision API",
-    version="3.0 FINAL",
-    description="Secure Multi-user SaaS Decision Intelligence Engine"
+    version="3.0 ENTERPRISE",
+    description="Multi-user SaaS AI Decision Intelligence Engine"
 )
 
 # =========================
@@ -77,18 +77,39 @@ class RegisterInput(BaseModel):
 # =========================
 # HEALTH CHECK
 # =========================
-@app.get("/", tags=["System"])
+@app.get("/")
 def root():
     return {
-        "status": "GDSN-X API Running 🚀",
-        "version": "3.0 FINAL"
+        "status": "GDSN-X Enterprise API Running 🚀",
+        "version": "3.0 ENTERPRISE"
     }
 
 
 # =========================
-# 🔐 REGISTER API
+# 🔐 LOGIN API
 # =========================
-@app.post("/register", tags=["Auth"])
+@app.post("/login")
+def login(data: LoginInput, db: Session = Depends(get_db)):
+
+    user = crud.verify_user(db, data.username, data.password)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = create_access_token({
+        "sub": user.username
+    })
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
+
+
+# =========================
+# 👤 REGISTER API
+# =========================
+@app.post("/register")
 def register(data: RegisterInput, db: Session = Depends(get_db)):
 
     user = crud.create_user(
@@ -99,46 +120,15 @@ def register(data: RegisterInput, db: Session = Depends(get_db)):
     )
 
     if not user:
-        raise HTTPException(
-            status_code=400,
-            detail="User already exists"
-        )
+        raise HTTPException(status_code=400, detail="User already exists")
 
-    return {
-        "message": "User created successfully"
-    }
-
-
-# =========================
-# 🔐 LOGIN API
-# =========================
-@app.post("/login", tags=["Auth"])
-def login(data: LoginInput, db: Session = Depends(get_db)):
-
-    user = crud.verify_user(db, data.username, data.password)
-
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid credentials"
-        )
-
-    # 🔐 FINAL TOKEN (SECURE)
-    token = create_access_token({
-        "sub": user.username,
-        "user_id": user.id
-    })
-
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+    return {"message": "User created successfully"}
 
 
 # =========================
 # 🚀 RISK ENGINE (PROTECTED)
 # =========================
-@app.post("/api/v3/risk", tags=["Core"])
+@app.post("/api/v3/risk")
 def calculate_risk(
     data: RiskInput,
     db: Session = Depends(get_db),
@@ -146,7 +136,6 @@ def calculate_risk(
 ) -> Dict:
 
     try:
-        # CORE ENGINE
         score, level, meta = risk_score(
             data.economic,
             data.political,
@@ -223,7 +212,7 @@ def calculate_risk(
             iterations=data.iterations
         )
 
-        # SAVE TO DB
+        # ================= DB SAVE =================
         record = models.Analysis(
             user_id=user.id,
             country=data.country,
@@ -276,21 +265,18 @@ def calculate_risk(
 
 
 # =========================
-# 📊 USER HISTORY (PROTECTED)
+# 📊 HISTORY (PROTECTED)
 # =========================
-@app.get("/api/v3/history", tags=["User"])
+@app.get("/api/v3/history")
 def get_history(
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
 
-    # ✅ FIXED CLEAN QUERY
-    records = (
-        db.query(models.Analysis)
-        .filter(models.Analysis.user_id == user.id)
-        .order_by(models.Analysis.created_at.desc())
+    records = db.query(models.Analysis)\
+        .filter(models.Analysis.user_id == user.id)\
+        .order_by(models.Analysis.created_at.desc())\
         .all()
-    )
 
     return [
         {

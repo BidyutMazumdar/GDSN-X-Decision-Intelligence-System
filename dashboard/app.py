@@ -1,5 +1,5 @@
 # =========================
-# 🧠 GDSN-X™ DASHBOARD (ENTERPRISE v3 - ABSOLUTE FINAL LOCK)
+# 🧠 GDSN-X™ DASHBOARD (ENTERPRISE v3 - FINAL LOCK 🔐)
 # =========================
 
 import streamlit as st
@@ -13,49 +13,61 @@ import os
 # =========================
 st.set_page_config(page_title="GDSN-X™ SaaS", layout="wide")
 
-# 🔥 PRODUCTION SAFE (ENV SUPPORT)
 API_BASE = os.getenv("API_BASE", "http://localhost:8000/api/v3")
+BASE_URL = API_BASE.replace("/api/v3", "")
 TIMEOUT = 15
 
 # =========================
-# 🔐 MAIN LOGIN SCREEN
+# 🔐 LOGIN SCREEN
 # =========================
 if "token" not in st.session_state:
 
     st.title("🔐 GDSN-X Login")
-    st.markdown("Enter your credentials to access the platform")
+    st.caption("Secure Access Portal")
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
-    if st.button("Login"):
+    if st.button("Login", use_container_width=True):
+
+        # ✅ FIX 1: Empty validation
+        if not username or not password:
+            st.warning("⚠️ Enter username & password")
+            st.stop()
+
         try:
             res = requests.post(
-                f"{API_BASE.replace('/api/v3','')}/login",
+                f"{BASE_URL}/login",
                 json={"username": username, "password": password},
                 timeout=TIMEOUT
             )
 
             if res.status_code == 200:
-                st.session_state["token"] = res.json()["access_token"]
+                data = res.json()
+                st.session_state["token"] = data["access_token"]
                 st.success("✅ Login successful")
                 st.rerun()
-            else:
+
+            elif res.status_code == 401:
                 st.error("❌ Invalid credentials")
 
-        except:
-            st.error("❌ Server not reachable")
+            else:
+                st.error(f"❌ Server error: {res.text}")
+
+        except requests.exceptions.Timeout:
+            st.error("❌ Server timeout")
+
+        except requests.exceptions.ConnectionError:
+            st.error("❌ API not reachable")
 
     st.stop()
 
 # =========================
-# 🔓 LOGOUT (SAFE)
+# 🔓 LOGOUT
 # =========================
-if "token" in st.session_state:
-    if st.sidebar.button("Logout"):
-        del st.session_state["token"]
-        st.session_state.pop("result", None)  # clear old result
-        st.rerun()
+if st.sidebar.button("Logout"):
+    st.session_state.clear()
+    st.rerun()
 
 # =========================
 # 🧾 HEADER
@@ -64,7 +76,7 @@ st.title("🧠 GDSN-X™ Decision Intelligence Platform")
 st.caption("Enterprise SaaS • API v3 • Secure • Scalable")
 
 # =========================
-# 🧾 CONFIGURATION
+# ⚙️ SIDEBAR CONFIG
 # =========================
 st.sidebar.header("🧾 Configuration")
 
@@ -97,7 +109,11 @@ def load_data():
 
 df = load_data()
 
-country = st.selectbox("🌍 Select Country", sorted(df["country"].dropna().unique()))
+country = st.selectbox(
+    "🌍 Select Country",
+    sorted(df["country"].dropna().unique())
+)
+
 row = df[df["country"] == country].iloc[0]
 
 # =========================
@@ -157,13 +173,18 @@ categories = ["Economic", "Political", "Social", "Tech", "Env", "Legal"]
 values = [economic, political, social, tech, env, legal]
 
 fig = go.Figure()
+
 fig.add_trace(go.Scatterpolar(
     r=values + [values[0]],
     theta=categories + [categories[0]],
     fill='toself'
 ))
 
-fig.update_layout(polar=dict(radialaxis=dict(range=[0, 100])))
+fig.update_layout(
+    polar=dict(radialaxis=dict(range=[0, 100])),
+    showlegend=False
+)
+
 st.plotly_chart(fig, use_container_width=True)
 
 # =========================
@@ -195,22 +216,27 @@ if st.button("🚀 Run Analysis", use_container_width=True):
             timeout=TIMEOUT
         )
 
-        if res.status_code != 200:
+        # ✅ FIX 2: Proper response handling
+        if res.status_code == 200:
+            st.session_state["result"] = res.json()
+
+        elif res.status_code == 401:
+            st.error("❌ Session expired, login again")
+            st.session_state.clear()
+            st.rerun()
+
+        else:
             st.error(f"❌ API Error: {res.text}")
             st.stop()
 
-        st.session_state["result"] = res.json()
-
     except requests.exceptions.Timeout:
         st.error("❌ Request timeout")
-        st.stop()
 
-    except requests.exceptions.RequestException:
+    except requests.exceptions.ConnectionError:
         st.error("❌ API connection failed")
-        st.stop()
 
 # =========================
-# 📊 PERSISTENT RESULT
+# 📊 RESULT DISPLAY
 # =========================
 if "result" in st.session_state:
 

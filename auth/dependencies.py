@@ -11,9 +11,9 @@ from auth.auth import SECRET_KEY, ALGORITHM
 
 
 # =========================
-# 🔐 TOKEN SCHEME
+# 🔐 TOKEN SCHEME 
 # =========================
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v2/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
 # =========================
@@ -53,7 +53,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
 def require_admin(user: str = Depends(get_current_user)) -> str:
     """
     Example admin-only access control
-    (Extend later with DB roles)
     """
 
     if user != "admin":

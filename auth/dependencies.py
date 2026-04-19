@@ -1,5 +1,5 @@
 # =========================
-# 🔐 AUTH DEPENDENCIES (ABSOLUTE FINAL LOCK 🔒)
+# 🔐 AUTH DEPENDENCIES (ABSOLUTE FINAL LOCK)
 # =========================
 
 from fastapi import Depends, HTTPException, status
@@ -11,6 +11,7 @@ from auth.auth import SECRET_KEY, ALGORITHM
 from db.database import get_db
 from db import models
 
+
 # =========================
 # 🔐 TOKEN SCHEME
 # =========================
@@ -18,15 +19,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
 # =========================
-# 🔐 GET CURRENT USER (FIXED 🔥)
+# 🔐 GET CURRENT USER
 # =========================
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    """
-    Extract and validate user from JWT token
-    """
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -36,7 +34,6 @@ def get_current_user(
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-
         username: str = payload.get("sub")
 
         if username is None:
@@ -45,7 +42,6 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    # ✅ DB থেকে user fetch (CRITICAL FIX)
     user = db.query(models.User).filter(models.User.username == username).first()
 
     if user is None:

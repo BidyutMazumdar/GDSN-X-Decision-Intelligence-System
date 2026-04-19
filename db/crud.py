@@ -1,7 +1,3 @@
-# =========================
-# 🧑‍💼 CRUD OPERATIONS (FINAL LOCK 🔒)
-# =========================
-
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -9,12 +5,8 @@ from db import models
 from auth.security import hash_password, verify_password
 
 
-# =========================
-# CREATE USER
-# =========================
 def create_user(db: Session, username: str, email: str, password: str):
 
-    # 🔐 Check if user already exists
     existing_user = db.query(models.User).filter(
         or_(
             models.User.username == username,
@@ -23,29 +15,26 @@ def create_user(db: Session, username: str, email: str, password: str):
     ).first()
 
     if existing_user:
-        return None  # 🚨 duplicate user
+        return None
 
-    # 🔐 Hash password
     hashed_password = hash_password(password)
 
-    # 🧑‍💼 Create user object
     new_user = models.User(
         username=username,
         email=email,
         hashed_password=hashed_password
     )
 
-    # 💾 Save to DB
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except Exception:
+        db.rollback()
+        return None
 
-    return new_user
 
-
-# =========================
-# GET USER BY USERNAME
-# =========================
 def get_user(db: Session, username: str):
 
     return db.query(models.User).filter(
@@ -53,9 +42,6 @@ def get_user(db: Session, username: str):
     ).first()
 
 
-# =========================
-# GET USER BY EMAIL (PRO FEATURE)
-# =========================
 def get_user_by_email(db: Session, email: str):
 
     return db.query(models.User).filter(
@@ -63,9 +49,6 @@ def get_user_by_email(db: Session, email: str):
     ).first()
 
 
-# =========================
-# VERIFY USER LOGIN
-# =========================
 def verify_user(db: Session, username: str, password: str):
 
     user = get_user(db, username)
@@ -79,9 +62,6 @@ def verify_user(db: Session, username: str, password: str):
     return user
 
 
-# =========================
-# DELETE USER (ADMIN FEATURE)
-# =========================
 def delete_user(db: Session, user_id: int):
 
     user = db.query(models.User).filter(
@@ -91,7 +71,10 @@ def delete_user(db: Session, user_id: int):
     if not user:
         return False
 
-    db.delete(user)
-    db.commit()
-
-    return True
+    try:
+        db.delete(user)
+        db.commit()
+        return True
+    except Exception:
+        db.rollback()
+        return False

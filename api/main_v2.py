@@ -1,5 +1,5 @@
 # =========================
-# 🏢 GDSN-X™ ENTERPRISE API (FINAL v3 - ABSOLUTE LOCK 🔐)
+# GDSN-X™ ENTERPRISE API (ABSOLUTE FINAL LOCK)
 # =========================
 
 from fastapi import FastAPI, HTTPException, Depends
@@ -27,7 +27,7 @@ from system.simulation import run_simulation
 # =========================
 # DB LAYER
 # =========================
-from db.database import get_db
+from db.database import get_db, engine
 from db import models, crud
 
 # =========================
@@ -41,9 +41,14 @@ from auth.auth import create_access_token
 # =========================
 app = FastAPI(
     title="GDSN-X™ Enterprise Decision API",
-    version="3.0 ENTERPRISE",
+    version="2.0 ENTERPRISE",
     description="Multi-user SaaS AI Decision Intelligence Engine"
 )
+
+# =========================
+# DATABASE INIT
+# =========================
+models.Base.metadata.create_all(bind=engine)
 
 # =========================
 # REQUEST MODELS
@@ -80,13 +85,13 @@ class RegisterInput(BaseModel):
 @app.get("/")
 def root():
     return {
-        "status": "GDSN-X Enterprise API Running 🚀",
+        "status": "GDSN-X Enterprise API Running",
         "version": "3.0 ENTERPRISE"
     }
 
 
 # =========================
-# 🔐 LOGIN API
+# LOGIN API
 # =========================
 @app.post("/login")
 def login(data: LoginInput, db: Session = Depends(get_db)):
@@ -107,26 +112,33 @@ def login(data: LoginInput, db: Session = Depends(get_db)):
 
 
 # =========================
-# 👤 REGISTER API
+# REGISTER API
 # =========================
 @app.post("/register")
 def register(data: RegisterInput, db: Session = Depends(get_db)):
 
-    user = crud.create_user(
-        db,
-        data.username,
-        data.email,
-        data.password
-    )
+    try:
+        user = crud.create_user(
+            db,
+            data.username,
+            data.email,
+            data.password
+        )
 
-    if not user:
-        raise HTTPException(status_code=400, detail="User already exists")
+        if not user:
+            raise HTTPException(status_code=400, detail="User already exists")
 
-    return {"message": "User created successfully"}
+        return {"message": "User created successfully"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # =========================
-# 🚀 RISK ENGINE (PROTECTED)
+# RISK ENGINE
 # =========================
 @app.post("/api/v3/risk")
 def calculate_risk(
@@ -212,7 +224,6 @@ def calculate_risk(
             iterations=data.iterations
         )
 
-        # ================= DB SAVE =================
         record = models.Analysis(
             user_id=user.id,
             country=data.country,
@@ -260,12 +271,12 @@ def calculate_risk(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Engine Error: {str(e)}"
+            detail=str(e)
         )
 
 
 # =========================
-# 📊 HISTORY (PROTECTED)
+# HISTORY
 # =========================
 @app.get("/api/v3/history")
 def get_history(

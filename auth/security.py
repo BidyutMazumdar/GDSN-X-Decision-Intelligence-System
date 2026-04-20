@@ -6,11 +6,23 @@ pwd_context = CryptContext(
     bcrypt__rounds=12
 )
 
+# =========================
+# 🔐 INTERNAL: BCRYPT SAFE CHECK
+# =========================
 def _is_bcrypt_safe(password: str) -> bool:
+    """
+    Ensure password ≤ 72 bytes (bcrypt limit)
+    """
     return len(password.encode("utf-8")) <= 72
 
 
+# =========================
+# 🔐 PASSWORD POLICY (STRICT)
+# =========================
 def validate_password_strength(password: str) -> None:
+    """
+    Enforce strong password policy
+    """
 
     if not password or not password.strip():
         raise ValueError("Password cannot be empty")
@@ -28,7 +40,13 @@ def validate_password_strength(password: str) -> None:
         raise ValueError("Password must include at least one digit")
 
 
+# =========================
+# 🔐 HASH PASSWORD
+# =========================
 def hash_password(password: str) -> str:
+    """
+    Convert plain password → secure hash
+    """
 
     validate_password_strength(password)
 
@@ -38,12 +56,18 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
+# =========================
+# 🔐 VERIFY PASSWORD
+# =========================
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Safe verification (no crash)
+    """
 
     if not plain_password or not hashed_password:
         return False
 
-    # 🔥 IMPORTANT: safe reject (no exception)
+    # 🔥 safe reject (no exception)
     if not _is_bcrypt_safe(plain_password):
         return False
 

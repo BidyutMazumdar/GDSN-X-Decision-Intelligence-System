@@ -1,5 +1,5 @@
 # =========================
-# GDSN-X™ ENTERPRISE API (ABSOLUTE FINAL LOCK)
+# 🔐 GDSN-X™ ENTERPRISE API (ABSOLUTE FINAL LOCK)
 # =========================
 
 from fastapi import FastAPI, HTTPException, Depends
@@ -41,7 +41,7 @@ from auth.auth import create_access_token
 # =========================
 app = FastAPI(
     title="GDSN-X™ Enterprise Decision API",
-    version="2.0 ENTERPRISE",
+    version="3.0 ENTERPRISE",
     description="Multi-user SaaS AI Decision Intelligence Engine"
 )
 
@@ -112,7 +112,7 @@ def login(data: LoginInput, db: Session = Depends(get_db)):
 
 
 # =========================
-# REGISTER API
+# 🔐 REGISTER API (FINAL FIXED)
 # =========================
 @app.post("/register")
 def register(data: RegisterInput, db: Session = Depends(get_db)):
@@ -130,11 +130,13 @@ def register(data: RegisterInput, db: Session = Depends(get_db)):
 
         return {"message": "User created successfully"}
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+    except ValueError as e:
+        # 🔥 USER ERROR → 400 (validation, bcrypt length, etc.)
+        raise HTTPException(status_code=400, detail=str(e))
+
+    except Exception:
+        # 🔥 SYSTEM ERROR → 500 (hidden/internal)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 # =========================
@@ -268,10 +270,10 @@ def calculate_risk(
             }
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail="Internal Server Error"
         )
 
 

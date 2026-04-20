@@ -1,70 +1,53 @@
-# =========================
-# 🔐 PASSWORD SECURITY (ULTIMATE LOCK 🔒)
-# GDSN-X™ Enterprise Security Layer
-# =========================
-
 from passlib.context import CryptContext
 
-
-# =========================
-# 🔐 HASHING CONFIGURATION
-# =========================
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
-    bcrypt__rounds=12   # 🔐 strong security (recommended default)
+    bcrypt__rounds=12
 )
 
+def _is_bcrypt_safe(password: str) -> bool:
+    return len(password.encode("utf-8")) <= 72
 
-# =========================
-# 🔐 HASH PASSWORD
-# =========================
-def hash_password(password: str) -> str:
-    """
-    Convert plain password → secure hash
-    """
+
+def validate_password_strength(password: str) -> None:
 
     if not password or not password.strip():
         raise ValueError("Password cannot be empty")
 
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters")
+
+    if not any(c.isupper() for c in password):
+        raise ValueError("Password must include at least one uppercase letter")
+
+    if not any(c.islower() for c in password):
+        raise ValueError("Password must include at least one lowercase letter")
+
+    if not any(c.isdigit() for c in password):
+        raise ValueError("Password must include at least one digit")
+
+
+def hash_password(password: str) -> str:
+
+    validate_password_strength(password)
+
+    if not _is_bcrypt_safe(password):
+        raise ValueError("Password too long (max 72 bytes for bcrypt)")
+
     return pwd_context.hash(password)
 
 
-# =========================
-# 🔐 VERIFY PASSWORD
-# =========================
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verify plain password against hashed password
-    """
 
     if not plain_password or not hashed_password:
+        return False
+
+    # 🔥 IMPORTANT: safe reject (no exception)
+    if not _is_bcrypt_safe(plain_password):
         return False
 
     try:
         return pwd_context.verify(plain_password, hashed_password)
     except Exception:
         return False
-
-
-# =========================
-# 🔐 PASSWORD POLICY (ELITE)
-# =========================
-def validate_password_strength(password: str) -> bool:
-    """
-    Enforce strong password policy
-    Rules:
-    - min 8 characters
-    - at least 1 uppercase
-    - at least 1 lowercase
-    - at least 1 digit
-    """
-
-    if not password or len(password) < 8:
-        return False
-
-    has_upper = any(c.isupper() for c in password)
-    has_lower = any(c.islower() for c in password)
-    has_digit = any(c.isdigit() for c in password)
-
-    return has_upper and has_lower and has_digit

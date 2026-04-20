@@ -1,11 +1,20 @@
 # =========================
-# 🔐 GDSN-X™ ENTERPRISE API (ABSOLUTE FINAL LOCK)
+# 🔐 GDSN-X™ ENTERPRISE API (ULTIMATE LOCK EDITION)
 # =========================
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, Optional
 from sqlalchemy.orm import Session
+import logging
+
+# =========================
+# 🔐 LOGGING CONFIG
+# =========================
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # =========================
 # ENGINE IMPORT
@@ -27,7 +36,7 @@ from system.simulation import run_simulation
 # =========================
 # DB LAYER
 # =========================
-from db.database import get_db, engine
+from db.database import get_db
 from db import models, crud
 
 # =========================
@@ -41,14 +50,37 @@ from auth.auth import create_access_token
 # =========================
 app = FastAPI(
     title="GDSN-X™ Enterprise Decision API",
-    version="3.0 ENTERPRISE",
-    description="Multi-user SaaS AI Decision Intelligence Engine"
+    version="4.0 ULTIMATE",
+    description="Enterprise-grade AI Decision Intelligence Engine"
 )
 
 # =========================
-# DATABASE INIT
+# STARTUP EVENT
 # =========================
-models.Base.metadata.create_all(bind=engine)
+@app.on_event("startup")
+def on_startup():
+    logger.info("🚀 GDSN-X API started (Ultimate Lock Edition)")
+
+# =========================
+# GLOBAL ERROR HANDLER (FINAL FIXED)
+# =========================
+@app.exception_handler(Exception)
+def global_exception_handler(request: Request, exc: Exception):
+
+    # 🔥 Preserve HTTPException (DO NOT override)
+    if isinstance(exc, FastAPIHTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail}
+        )
+
+    # 🔥 Full traceback logging
+    logger.exception("Unhandled error")
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error"}
+    )
 
 # =========================
 # REQUEST MODELS
@@ -78,7 +110,6 @@ class RegisterInput(BaseModel):
     email: str
     password: str
 
-
 # =========================
 # HEALTH CHECK
 # =========================
@@ -86,9 +117,8 @@ class RegisterInput(BaseModel):
 def root():
     return {
         "status": "GDSN-X Enterprise API Running",
-        "version": "3.0 ENTERPRISE"
+        "version": "4.0 ULTIMATE"
     }
-
 
 # =========================
 # LOGIN API
@@ -96,23 +126,31 @@ def root():
 @app.post("/login")
 def login(data: LoginInput, db: Session = Depends(get_db)):
 
-    user = crud.verify_user(db, data.username, data.password)
+    try:
+        user = crud.verify_user(db, data.username, data.password)
 
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token({
-        "sub": user.username
-    })
+        token = create_access_token({
+            "sub": user.username,
+            "user_id": user.id
+        })
 
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+        return {
+            "access_token": token,
+            "token_type": "bearer"
+        }
 
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception("Login error")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # =========================
-# 🔐 REGISTER API (FINAL FIXED)
+# REGISTER API
 # =========================
 @app.post("/register")
 def register(data: RegisterInput, db: Session = Depends(get_db)):
@@ -131,13 +169,14 @@ def register(data: RegisterInput, db: Session = Depends(get_db)):
         return {"message": "User created successfully"}
 
     except ValueError as e:
-        # 🔥 USER ERROR → 400 (validation, bcrypt length, etc.)
         raise HTTPException(status_code=400, detail=str(e))
 
-    except Exception:
-        # 🔥 SYSTEM ERROR → 500 (hidden/internal)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    except HTTPException:
+        raise
 
+    except Exception:
+        logger.exception("Register error")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # =========================
 # RISK ENGINE
@@ -211,7 +250,6 @@ def calculate_risk(
         )
 
         decision_conf = decision_confidence(score)
-
         recommendation = risk_recommendation(level, data.strategy_mode)
 
         simulation = run_simulation(
@@ -271,11 +309,8 @@ def calculate_risk(
         }
 
     except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail="Internal Server Error"
-        )
-
+        logger.exception("Risk engine error")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # =========================
 # HISTORY
@@ -286,18 +321,23 @@ def get_history(
     user = Depends(get_current_user)
 ):
 
-    records = db.query(models.Analysis)\
-        .filter(models.Analysis.user_id == user.id)\
-        .order_by(models.Analysis.created_at.desc())\
-        .all()
+    try:
+        records = db.query(models.Analysis)\
+            .filter(models.Analysis.user_id == user.id)\
+            .order_by(models.Analysis.created_at.desc())\
+            .all()
 
-    return [
-        {
-            "id": r.id,
-            "country": r.country,
-            "score": r.score,
-            "level": r.level,
-            "created_at": r.created_at
-        }
-        for r in records
-    ]
+        return [
+            {
+                "id": r.id,
+                "country": r.country,
+                "score": r.score,
+                "level": r.level,
+                "created_at": r.created_at
+            }
+            for r in records
+        ]
+
+    except Exception:
+        logger.exception("History fetch error")
+        raise HTTPException(status_code=500, detail="Internal Server Error")

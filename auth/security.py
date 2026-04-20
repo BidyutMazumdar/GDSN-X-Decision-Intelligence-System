@@ -1,5 +1,8 @@
 from passlib.context import CryptContext
 
+# =========================
+# 🔐 PASSWORD HASH CONFIG
+# =========================
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
@@ -41,23 +44,29 @@ def validate_password_strength(password: str) -> None:
 
 
 # =========================
-# 🔐 HASH PASSWORD
+# 🔐 HASH PASSWORD (ABSOLUTE FINAL)
 # =========================
 def hash_password(password: str) -> str:
     """
     Convert plain password → secure hash
     """
 
+    # ✅ Normalize input
+    password = password.strip()
+
+    # ✅ Strength validation
     validate_password_strength(password)
 
+    # ✅ Bcrypt safety check (prevents crash)
     if not _is_bcrypt_safe(password):
         raise ValueError("Password too long (max 72 bytes for bcrypt)")
 
+    # ✅ Secure hashing
     return pwd_context.hash(password)
 
 
 # =========================
-# 🔐 VERIFY PASSWORD
+# 🔐 VERIFY PASSWORD (SAFE)
 # =========================
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
@@ -67,7 +76,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not plain_password or not hashed_password:
         return False
 
-    # 🔥 safe reject (no exception)
+    # 🔐 Normalize input
+    plain_password = plain_password.strip()
+
+    # 🔥 Safe reject (prevents bcrypt crash)
     if not _is_bcrypt_safe(plain_password):
         return False
 

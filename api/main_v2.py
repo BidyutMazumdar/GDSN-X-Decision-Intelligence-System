@@ -62,19 +62,17 @@ def on_startup():
     logger.info("🚀 GDSN-X API started (Ultimate Lock Edition)")
 
 # =========================
-# GLOBAL ERROR HANDLER (FINAL FIXED)
+# GLOBAL ERROR HANDLER
 # =========================
 @app.exception_handler(Exception)
 def global_exception_handler(request: Request, exc: Exception):
 
-    # 🔥 Preserve HTTPException (DO NOT override)
     if isinstance(exc, FastAPIHTTPException):
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": exc.detail}
         )
 
-    # 🔥 Full traceback logging
     logger.exception("Unhandled error")
 
     return JSONResponse(

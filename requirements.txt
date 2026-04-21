@@ -16,10 +16,10 @@ fastapi
 uvicorn[standard]
 pydantic
 
-# 🔐 AUTH
+# 🔐 AUTH (LOCKED — CRITICAL FIX)
 python-jose[cryptography]
-passlib[bcrypt]
-bcrypt
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
 python-dotenv
 
 # 🧑‍💼 DATABASE

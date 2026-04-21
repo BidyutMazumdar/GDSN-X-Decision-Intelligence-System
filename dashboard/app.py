@@ -1,28 +1,18 @@
-# =========================
-# 🧠 GDSN-X™ DASHBOARD (ENTERPRISE v3 - FINAL LOCK 🔐)
-# =========================
-
 import streamlit as st
 import pandas as pd
 import requests
 import plotly.graph_objects as go
 import os
 
-# =========================
-# ⚙️ CONFIG
-# =========================
-st.set_page_config(page_title="GDSN-X™ SaaS", layout="wide")
+st.set_page_config(page_title="GDSN-X SaaS", layout="wide")
 
-API_BASE = os.getenv("API_BASE", "http://localhost:8000/api/v3")
-BASE_URL = API_BASE.replace("/api/v3", "")
-TIMEOUT = 15
+API_BASE = "https://gdsn-x-decision-intelligence-system.onrender.com/api/v3"
+BASE_URL = "https://gdsn-x-decision-intelligence-system.onrender.com"
+TIMEOUT = 20
 
-# =========================
-# 🔐 LOGIN SCREEN
-# =========================
 if "token" not in st.session_state:
 
-    st.title("🔐 GDSN-X Login")
+    st.title("GDSN-X Login")
     st.caption("Secure Access Portal")
 
     username = st.text_input("Username")
@@ -30,12 +20,16 @@ if "token" not in st.session_state:
 
     if st.button("Login", use_container_width=True):
 
-        # ✅ FIX 1: Empty validation
         if not username or not password:
-            st.warning("⚠️ Enter username & password")
+            st.warning("Enter username and password")
             st.stop()
 
         try:
+            try:
+                requests.get(f"{BASE_URL}/health", timeout=5)
+            except:
+                pass
+
             res = requests.post(
                 f"{BASE_URL}/login",
                 json={"username": username, "password": password},
@@ -45,40 +39,31 @@ if "token" not in st.session_state:
             if res.status_code == 200:
                 data = res.json()
                 st.session_state["token"] = data["access_token"]
-                st.success("✅ Login successful")
+                st.success("Login successful")
                 st.rerun()
 
             elif res.status_code == 401:
-                st.error("❌ Invalid credentials")
+                st.error("Invalid credentials")
 
             else:
-                st.error(f"❌ Server error: {res.text}")
+                st.error(f"Server error ({res.status_code}): {res.text}")
 
         except requests.exceptions.Timeout:
-            st.error("❌ Server timeout")
+            st.error("Server timeout")
 
         except requests.exceptions.ConnectionError:
-            st.error("❌ API not reachable")
+            st.error("API not reachable")
 
     st.stop()
 
-# =========================
-# 🔓 LOGOUT
-# =========================
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.rerun()
 
-# =========================
-# 🧾 HEADER
-# =========================
-st.title("🧠 GDSN-X™ Decision Intelligence Platform")
+st.title("GDSN-X Decision Intelligence Platform")
 st.caption("Enterprise SaaS • API v3 • Secure • Scalable")
 
-# =========================
-# ⚙️ SIDEBAR CONFIG
-# =========================
-st.sidebar.header("🧾 Configuration")
+st.sidebar.header("Configuration")
 
 client_name = st.sidebar.text_input("Client Name")
 project_name = st.sidebar.text_input("Project Name")
@@ -98,9 +83,6 @@ scenario_type = st.sidebar.selectbox(
     ["Base Case", "Best Case", "Worst Case"]
 )
 
-# =========================
-# 📊 LOAD DATA
-# =========================
 DATA_PATH = os.path.join("data", "country_risk.csv")
 
 @st.cache_data
@@ -110,15 +92,18 @@ def load_data():
 df = load_data()
 
 country = st.selectbox(
-    "🌍 Select Country",
+    "Select Country",
     sorted(df["country"].dropna().unique())
 )
 
-row = df[df["country"] == country].iloc[0]
+filtered = df[df["country"] == country]
 
-# =========================
-# 🎯 SAFE INPUT
-# =========================
+if filtered.empty:
+    st.error("No data found for selected country")
+    st.stop()
+
+row = filtered.iloc[0]
+
 def safe(x):
     try:
         return max(0, min(float(x), 100))
@@ -129,10 +114,7 @@ economic = safe(row["economic"])
 political = safe(row["political"])
 social = safe(row["social"])
 
-# =========================
-# ⚙️ ADVANCED INPUT
-# =========================
-st.subheader("⚙️ Advanced Risk Inputs")
+st.subheader("Advanced Risk Inputs")
 
 col1, col2, col3 = st.columns(3)
 
@@ -145,9 +127,6 @@ with col2:
 with col3:
     legal = st.slider("Legal Risk", 0, 100, 50)
 
-# =========================
-# 🔁 SCENARIO
-# =========================
 def apply_scenario(values):
     if scenario_type == "Best Case":
         return [max(v - 10, 0) for v in values]
@@ -159,16 +138,10 @@ economic, political, social, tech, env, legal = apply_scenario(
     [economic, political, social, tech, env, legal]
 )
 
-# =========================
-# ⚠️ VALIDATION
-# =========================
 if not client_name or not project_name:
-    st.warning("⚠️ Fill Client & Project details")
+    st.warning("Fill Client and Project details")
     st.stop()
 
-# =========================
-# 📊 RADAR CHART
-# =========================
 categories = ["Economic", "Political", "Social", "Tech", "Env", "Legal"]
 values = [economic, political, social, tech, env, legal]
 
@@ -187,10 +160,7 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# =========================
-# 🚀 RUN ANALYSIS
-# =========================
-if st.button("🚀 Run Analysis", use_container_width=True):
+if st.button("Run Analysis", use_container_width=True):
 
     headers = {
         "Authorization": f"Bearer {st.session_state['token']}"
@@ -216,28 +186,23 @@ if st.button("🚀 Run Analysis", use_container_width=True):
             timeout=TIMEOUT
         )
 
-        # ✅ FIX 2: Proper response handling
         if res.status_code == 200:
             st.session_state["result"] = res.json()
 
         elif res.status_code == 401:
-            st.error("❌ Session expired, login again")
+            st.error("Session expired")
             st.session_state.clear()
             st.rerun()
 
         else:
-            st.error(f"❌ API Error: {res.text}")
-            st.stop()
+            st.error(f"API Error ({res.status_code}): {res.text}")
 
     except requests.exceptions.Timeout:
-        st.error("❌ Request timeout")
+        st.error("Request timeout")
 
     except requests.exceptions.ConnectionError:
-        st.error("❌ API connection failed")
+        st.error("API connection failed")
 
-# =========================
-# 📊 RESULT DISPLAY
-# =========================
 if "result" in st.session_state:
 
     data = st.session_state["result"]
@@ -250,16 +215,13 @@ if "result" in st.session_state:
     colB.metric("Risk Level", data["core"]["level"])
     colC.metric("Decision Confidence", data["core"]["decision_conf"])
 
-    st.subheader("📌 Insights")
+    st.subheader("Insights")
 
     st.info(data["explainability"]["explanation"])
     st.info(data["explainability"]["analysis"])
     st.success(data["recommendation"])
 
-# =========================
-# 📊 HISTORY
-# =========================
-st.sidebar.markdown("### 📊 User History")
+st.sidebar.markdown("User History")
 
 if st.sidebar.button("Load History"):
 

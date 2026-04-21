@@ -5,8 +5,12 @@ from db import models
 from auth.security import hash_password, verify_password
 
 
+# =========================
+# 🔐 CREATE USER (FINAL FIXED)
+# =========================
 def create_user(db: Session, username: str, email: str, password: str):
 
+    # 🔍 Check existing user
     existing_user = db.query(models.User).filter(
         or_(
             models.User.username == username,
@@ -17,38 +21,53 @@ def create_user(db: Session, username: str, email: str, password: str):
     if existing_user:
         return None
 
-    hashed_password = hash_password(password)
-
-    new_user = models.User(
-        username=username,
-        email=email,
-        hashed_password=hashed_password
-    )
-
     try:
+        # 🔐 Hash password (includes validation + bcrypt safety)
+        hashed_password = hash_password(password)
+
+        # 🧱 Create user
+        new_user = models.User(
+            username=username,
+            email=email,
+            hashed_password=hashed_password
+        )
+
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+
         return new_user
+
+    except ValueError:
+        # 🔥 propagate validation error → API will return 400
+        raise
+
     except Exception:
         db.rollback()
         return None
 
 
+# =========================
+# 🔍 GET USER
+# =========================
 def get_user(db: Session, username: str):
-
     return db.query(models.User).filter(
         models.User.username == username
     ).first()
 
 
+# =========================
+# 🔍 GET USER BY EMAIL
+# =========================
 def get_user_by_email(db: Session, email: str):
-
     return db.query(models.User).filter(
         models.User.email == email
     ).first()
 
 
+# =========================
+# 🔐 VERIFY USER
+# =========================
 def verify_user(db: Session, username: str, password: str):
 
     user = get_user(db, username)
@@ -62,6 +81,9 @@ def verify_user(db: Session, username: str, password: str):
     return user
 
 
+# =========================
+# 🗑 DELETE USER
+# =========================
 def delete_user(db: Session, user_id: int):
 
     user = db.query(models.User).filter(

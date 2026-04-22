@@ -21,7 +21,7 @@ from system.decision_engine import (
 from system.simulation import run_simulation
 
 from db.database import get_db
-from db import models, crud
+from db import crud
 
 from auth.dependencies import get_current_user
 from auth.auth import create_access_token
@@ -62,6 +62,10 @@ def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal Server Error"}
     )
 
+# =========================
+# INPUT SCHEMAS
+# =========================
+
 class RiskInput(BaseModel):
     economic: float = Field(..., ge=0, le=100)
     political: float = Field(..., ge=0, le=100)
@@ -83,6 +87,10 @@ class RegisterInput(BaseModel):
     email: str
     password: str
 
+# =========================
+# CORE ROUTES
+# =========================
+
 @app.get("/")
 def root():
     return {
@@ -94,20 +102,27 @@ def root():
 def health():
     return {"status": "ok"}
 
+# =========================
+# AUTH
+# =========================
+
 @app.post("/login")
 def login(data: LoginInput, db: Session = Depends(get_db)):
     try:
         user = crud.verify_user(db, data.username, data.password)
         if not user:
             raise HTTPException(status_code=401, detail="Invalid credentials")
+
         token = create_access_token({
             "sub": user.username,
             "user_id": user.id
         })
+
         return {
             "access_token": token,
             "token_type": "bearer"
         }
+
     except HTTPException:
         raise
     except Exception:
@@ -123,9 +138,12 @@ def register(data: RegisterInput, db: Session = Depends(get_db)):
             data.email,
             data.password
         )
+
         if not user:
             raise HTTPException(status_code=400, detail="User already exists")
+
         return {"message": "User created successfully"}
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
@@ -133,6 +151,10 @@ def register(data: RegisterInput, db: Session = Depends(get_db)):
     except Exception:
         logger.exception("Register error")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+# =========================
+# RISK ENGINE (DB FREE)
+# =========================
 
 @app.post("/api/v3/risk")
 def calculate_risk(
@@ -216,23 +238,6 @@ def calculate_risk(
             iterations=data.iterations
         )
 
-        record = models.Analysis(
-            user_id=user.id,
-            country=data.country,
-            score=score,
-            level=level,
-            payload=data.dict(),
-            result={
-                "analysis": analysis,
-                "recommendation": recommendation,
-                "decision_conf": decision_conf
-            }
-        )
-
-        db.add(record)
-        db.commit()
-        db.refresh(record)
-
         return {
             "core": {
                 "score": score,
@@ -255,7 +260,6 @@ def calculate_risk(
             "recommendation": recommendation,
             "simulation": simulation,
             "meta": {
-                "analysis_id": record.id,
                 "user_id": user.id
             }
         }
@@ -264,28 +268,10 @@ def calculate_risk(
         logger.exception("Risk engine error")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+# =========================
+# HISTORY (DISABLED SAFE MODE)
+# =========================
+
 @app.get("/api/v3/history")
-def get_history(
-    db: Session = Depends(get_db),
-    user = Depends(get_current_user)
-):
-    try:
-        records = db.query(models.Analysis)\
-            .filter(models.Analysis.user_id == user.id)\
-            .order_by(models.Analysis.created_at.desc())\
-            .all()
-
-        return [
-            {
-                "id": r.id,
-                "country": r.country,
-                "score": r.score,
-                "level": r.level,
-                "created_at": r.created_at
-            }
-            for r in records
-        ]
-
-    except Exception:
-        logger.exception("History fetch error")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+def get_history():
+    return []

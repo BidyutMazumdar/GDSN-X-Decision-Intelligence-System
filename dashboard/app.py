@@ -10,6 +10,9 @@ API_BASE = "https://gdsn-x-decision-intelligence-system.onrender.com/api/v3"
 BASE_URL = "https://gdsn-x-decision-intelligence-system.onrender.com"
 TIMEOUT = 20
 
+# =========================
+# AUTH SYSTEM
+# =========================
 if "token" not in st.session_state:
 
     st.title("GDSN-X Login")
@@ -46,7 +49,7 @@ if "token" not in st.session_state:
                 st.error("Invalid credentials")
 
             else:
-                st.error(f"Server error ({res.status_code}): {res.text}")
+                st.error(f"Server error ({res.status_code})")
 
         except requests.exceptions.Timeout:
             st.error("Server timeout")
@@ -56,13 +59,22 @@ if "token" not in st.session_state:
 
     st.stop()
 
+# =========================
+# LOGOUT
+# =========================
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.rerun()
 
+# =========================
+# HEADER
+# =========================
 st.title("GDSN-X Decision Intelligence Platform")
 st.caption("Enterprise SaaS • API v3 • Secure • Scalable")
 
+# =========================
+# CONFIG PANEL
+# =========================
 st.sidebar.header("Configuration")
 
 client_name = st.sidebar.text_input("Client Name")
@@ -83,14 +95,41 @@ scenario_type = st.sidebar.selectbox(
     ["Base Case", "Best Case", "Worst Case"]
 )
 
-DATA_PATH = os.path.join("data", "country_risk.csv")
+# =========================
+# FIXED DATA PATH (CRITICAL FIX)
+# =========================
+DATA_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "..",
+    "data",
+    "country_risk.csv"
+)
 
+# =========================
+# SAFE DATA LOADER
+# =========================
 @st.cache_data
 def load_data():
-    return pd.read_csv(DATA_PATH)
+    try:
+        df = pd.read_csv(DATA_PATH)
+        return df
+    except Exception as e:
+        st.error(f"Data load failed: {e}")
+        return pd.DataFrame({
+            "country": ["Demo"],
+            "economic": [50],
+            "political": [50],
+            "social": [50],
+            "tech": [50],
+            "env": [50],
+            "legal": [50],
+        })
 
 df = load_data()
 
+# =========================
+# COUNTRY SELECT
+# =========================
 country = st.selectbox(
     "Select Country",
     sorted(df["country"].dropna().unique())
@@ -99,21 +138,27 @@ country = st.selectbox(
 filtered = df[df["country"] == country]
 
 if filtered.empty:
-    st.error("No data found for selected country")
+    st.error("No data found")
     st.stop()
 
 row = filtered.iloc[0]
 
+# =========================
+# SAFE VALUE FUNCTION
+# =========================
 def safe(x):
     try:
         return max(0, min(float(x), 100))
     except:
-        return 0.0
+        return 50.0
 
 economic = safe(row["economic"])
 political = safe(row["political"])
 social = safe(row["social"])
 
+# =========================
+# ADVANCED INPUTS
+# =========================
 st.subheader("Advanced Risk Inputs")
 
 col1, col2, col3 = st.columns(3)
@@ -127,6 +172,9 @@ with col2:
 with col3:
     legal = st.slider("Legal Risk", 0, 100, 50)
 
+# =========================
+# SCENARIO ENGINE
+# =========================
 def apply_scenario(values):
     if scenario_type == "Best Case":
         return [max(v - 10, 0) for v in values]
@@ -138,10 +186,16 @@ economic, political, social, tech, env, legal = apply_scenario(
     [economic, political, social, tech, env, legal]
 )
 
+# =========================
+# VALIDATION
+# =========================
 if not client_name or not project_name:
     st.warning("Fill Client and Project details")
     st.stop()
 
+# =========================
+# RADAR CHART
+# =========================
 categories = ["Economic", "Political", "Social", "Tech", "Env", "Legal"]
 values = [economic, political, social, tech, env, legal]
 
@@ -160,6 +214,9 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
+# =========================
+# RUN ANALYSIS
+# =========================
 if st.button("Run Analysis", use_container_width=True):
 
     headers = {
@@ -188,14 +245,12 @@ if st.button("Run Analysis", use_container_width=True):
 
         if res.status_code == 200:
             st.session_state["result"] = res.json()
-
         elif res.status_code == 401:
             st.error("Session expired")
             st.session_state.clear()
             st.rerun()
-
         else:
-            st.error(f"API Error ({res.status_code}): {res.text}")
+            st.error(f"API Error ({res.status_code})")
 
     except requests.exceptions.Timeout:
         st.error("Request timeout")
@@ -203,6 +258,9 @@ if st.button("Run Analysis", use_container_width=True):
     except requests.exceptions.ConnectionError:
         st.error("API connection failed")
 
+# =========================
+# RESULT DISPLAY
+# =========================
 if "result" in st.session_state:
 
     data = st.session_state["result"]
@@ -221,6 +279,9 @@ if "result" in st.session_state:
     st.info(data["explainability"]["analysis"])
     st.success(data["recommendation"])
 
+# =========================
+# HISTORY
+# =========================
 st.sidebar.markdown("User History")
 
 if st.sidebar.button("Load History"):

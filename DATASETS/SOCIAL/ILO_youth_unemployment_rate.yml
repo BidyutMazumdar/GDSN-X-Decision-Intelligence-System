@@ -1,0 +1,49 @@
+DATASET_NAME: Youth Unemployment Rate
+
+SOURCE: ILOSTAT
+
+CATEGORY: Social Risk
+
+SUBCATEGORY: Labor Market
+
+INDICATOR:
+  - Youth unemployment rate (%)
+
+API:
+  https://rplumber.ilo.org/data/indicator?id=UNE_3EAP_SEX_AGE_DSB_RT_A&timefrom=2015&timeto=2025&type=label&format=.csv
+
+DOWNLOAD_FORMAT:
+  - CSV
+
+COUNTRIES:
+  150+
+
+YEARS:
+  2015-2025
+
+OBSERVATIONS:
+  17290
+
+UPDATE_FREQUENCY:
+  Annual
+
+STATUS:
+  ACTIVE
+
+LICENSE:
+  International Labour Organization (ILO)
+
+LAST_VERIFIED:
+  2026-06-17
+
+GDSNX_DOMAIN:
+  - Social Stability
+  - Labor Risk
+  - Youth Employment
+  - Human Capital
+
+DATA_QUALITY:
+  Official International Dataset
+
+SOURCE_URL:
+  https://rplumber.ilo.org/data/indicator?id=UNE_3EAP_SEX_AGE_DSB_RT_A&timefrom=2015&timeto=2025&type=label&format=.csv
